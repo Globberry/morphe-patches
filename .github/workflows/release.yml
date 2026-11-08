@@ -40,7 +40,10 @@ jobs:
         uses: cycjimmy/semantic-release-action@v8
         id: release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The PAT (MORPHE_GPR_KEY) is used both by semantic-release for the GitHub API
+          # and by Gradle to authenticate to the Morphe GitHub Packages registry.
+          GITHUB_ACTOR: ${{ secrets.MORPHE_GPR_USER }}
+          GITHUB_TOKEN: ${{ secrets.MORPHE_GPR_KEY }}
           MORPHE_SIGNING_KEY: ${{ secrets.MORPHE_SIGNING_KEY }}
 
       - name: Attest
@@ -55,5 +58,6 @@ jobs:
       - name: Verify project compiles
         if: steps.release.outputs.new_release_published != 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ secrets.MORPHE_GPR_USER }}
+          GITHUB_TOKEN: ${{ secrets.MORPHE_GPR_KEY }}
         run: ./gradlew :patches:buildAndroid clean --no-daemon
