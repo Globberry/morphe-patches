@@ -1,3 +1,9 @@
+## [1.0.3](https://github.com/Globberry/keyflow-patches/compare/v1.0.2...v1.0.3) (2026-11-08)
+
+### 🐛 Bug Fixes
+
+* remove VerifyError-causing azrbON injection; add pX6SrQYLl getter fake-receipt patch ([34aa6b1](https://github.com/Globberry/keyflow-patches/commit/34aa6b1aad85345364af44ef9f4ee802d5c627dd))
+
 ## [1.0.2](https://github.com/Globberry/keyflow-patches/compare/v1.0.1...v1.0.2) (2026-11-08)
 
 ### 🐛 Bug Fixes
