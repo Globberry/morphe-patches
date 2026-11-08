@@ -3,6 +3,7 @@ package app.template.patches.keyflow
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.Fingerprint
 import app.morphe.patcher.patch.patch
+import app.morphe.patcher.util.addFreeRegisters
 import app.morphe.patcher.util.returnEarly
 import app.template.patches.shared.Constants.COMPATIBILITY
 
@@ -65,25 +66,6 @@ val proPatch = patch(
             returnType = "V"
         ).method.returnEarly()
 
-        // mx6nK.azrbON(S19NG6) -> ensure the receipt is never null, then run the original.
-        Fingerprint(
-            definingClass = "Lmx6nK;",
-            name = "azrbON",
-            parameters = listOf("LS19NG6;"),
-            returnType = "V"
-        ).method.addInstructions(
-            0,
-            """
-                if-nez p0, :patch_mx6nK_azrb_skip
-                new-instance v0, LS19NG6;
-                const-string v1, ""
-                const-string v2, ""
-                invoke-direct {v0, v1, v2}, LS19NG6;-><init>(Ljava/lang/String;Ljava/lang/String;)V
-                move p0, v0
-                :patch_mx6nK_azrb_skip
-            """.trimIndent()
-        )
-
         // mx6nK.xo0eU() -> force xBtItM = true and publish true to pX6SrQYLl.
         Fingerprint(
             definingClass = "Lmx6nK;",
@@ -101,6 +83,26 @@ val proPatch = patch(
                 const/4 v2, 0x0
                 invoke-virtual {v1, v2, v0}, LEEoBErp8u;->H2h1oPylj(Ljava/lang/Object;Ljava/lang/Object;)Z
                 return-void
+            """.trimIndent()
+        )
+
+        // mx6nK.pX6SrQYLl() -> always return a fake receipt, never null.
+        // The getter has .locals 1 (only v0), so two free registers are added.
+        val (pX6SrQYLlMethod, pX6SrQYLlAdded) = Fingerprint(
+            definingClass = "Lmx6nK;",
+            name = "pX6SrQYLl",
+            parameters = listOf(),
+            returnType = "LS19NG6;"
+        ).method.addFreeRegisters(2)
+
+        pX6SrQYLlMethod.addInstructions(
+            pX6SrQYLlAdded,
+            """
+                new-instance v0, LS19NG6;
+                const-string v1, ""
+                const-string v2, ""
+                invoke-direct {v0, v1, v2}, LS19NG6;-><init>(Ljava/lang/String;Ljava/lang/String;)V
+                return-object v0
             """.trimIndent()
         )
 
