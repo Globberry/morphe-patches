@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-08T22:48:43",
-  "description": "## [1.0.1](https://github.com/Globberry/keyflow-patches/compare/v1.0.0...v1.0.1) (2026-11-08)\n\n### 🐛 Bug Fixes\n\n* chunk base64 cert to avoid inline smali lexer errors in Signer patch ([b5a75e4](https://github.com/Globberry/keyflow-patches/commit/b5a75e4f6b1cc82ebd4f889029703e73f1771ec0))",
-  "download_url": "https://github.com/Globberry/keyflow-patches/releases/download/v1.0.1/patches-1.0.1.mpp",
+  "created_at": "2026-11-08T22:57:28",
+  "description": "## [1.0.2](https://github.com/Globberry/keyflow-patches/compare/v1.0.1...v1.0.2) (2026-11-08)\n\n### 🐛 Bug Fixes\n\n* quote string literals in Signer patch const-string ([e350cf7](https://github.com/Globberry/keyflow-patches/commit/e350cf719fcffad1ee45289aa631209cf473fd36))",
+  "download_url": "https://github.com/Globberry/keyflow-patches/releases/download/v1.0.2/patches-1.0.2.mpp",
   "signature_download_url": "",
-  "version": "1.0.1"
+  "version": "1.0.2"
 }
