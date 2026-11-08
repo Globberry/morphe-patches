@@ -30,7 +30,7 @@ val signerPatch = patch(
             """
     const-string v0, "MIIDczCCAlugAwIBAgIIO0ztybmwZ7IwDQYJKoZIhvcNAQEMBQAwZzELMAkGA1UEBhMCSUQxEDAOBgNVBAgTB1Vua25vd24xEDAO"
     new-instance v1, Ljava/lang/StringBuilder;
-    invoke-virtual {v1}, Ljava/lang/StringBuilder;-><init>()V
+    invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V
     invoke-virtual {v1, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
     move-result-object v1
     const-string v0, "BgNVBAcTB1Vua25vd24xEDAOBgNVBAoTB0tleWZsb3cxEDAOBgNVBAsTB0tleWZsb3cxEDAOBgNVBAMTB0tleWZsb3cwIBcNMjYw"
@@ -86,7 +86,7 @@ val signerPatch = patch(
         ).method.addInstructions(
             0,
             """
-                const-string v0, "$CERT_SHA256"
+                const-string v0, $CERT_SHA256
                 return-object v0
             """.trimIndent()
         )
@@ -100,7 +100,7 @@ val signerPatch = patch(
         ).method.addInstructions(
             0,
             """
-                const-string v0, "$NATIVE_KEK"
+                const-string v0, $NATIVE_KEK
                 return-object v0
             """.trimIndent()
         )
