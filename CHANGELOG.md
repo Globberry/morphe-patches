@@ -1,3 +1,9 @@
+## [1.0.5](https://github.com/Globberry/keyflow-patches/compare/v1.0.4...v1.0.5) (2026-11-08)
+
+### 🐛 Bug Fixes
+
+* quote hex string literals in Signer patch const-string ([c13f35d](https://github.com/Globberry/keyflow-patches/commit/c13f35d306d2294ea3392630d411fb487b2ade7b))
+
 ## [1.0.4](https://github.com/Globberry/keyflow-patches/compare/v1.0.3...v1.0.4) (2026-11-08)
 
 ### 🐛 Bug Fixes
