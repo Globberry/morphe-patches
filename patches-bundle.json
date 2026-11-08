@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-08T23:12:20",
-  "description": "## [1.0.3](https://github.com/Globberry/keyflow-patches/compare/v1.0.2...v1.0.3) (2026-11-08)\n\n### 🐛 Bug Fixes\n\n* remove VerifyError-causing azrbON injection; add pX6SrQYLl getter fake-receipt patch ([34aa6b1](https://github.com/Globberry/keyflow-patches/commit/34aa6b1aad85345364af44ef9f4ee802d5c627dd))",
-  "download_url": "https://github.com/Globberry/keyflow-patches/releases/download/v1.0.3/patches-1.0.3.mpp",
+  "created_at": "2026-11-08T23:26:03",
+  "description": "## [1.0.4](https://github.com/Globberry/keyflow-patches/compare/v1.0.3...v1.0.4) (2026-11-08)\n\n### 🐛 Bug Fixes\n\n* invoke-direct for StringBuilder constructor in Signer patch ([6d3e333](https://github.com/Globberry/keyflow-patches/commit/6d3e3338b068971e9d268d75c44e40452fde4334))",
+  "download_url": "https://github.com/Globberry/keyflow-patches/releases/download/v1.0.4/patches-1.0.4.mpp",
   "signature_download_url": "",
-  "version": "1.0.3"
+  "version": "1.0.4"
 }

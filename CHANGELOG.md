@@ -1,3 +1,9 @@
+## [1.0.4](https://github.com/Globberry/keyflow-patches/compare/v1.0.3...v1.0.4) (2026-11-08)
+
+### 🐛 Bug Fixes
+
+* invoke-direct for StringBuilder constructor in Signer patch ([6d3e333](https://github.com/Globberry/keyflow-patches/commit/6d3e3338b068971e9d268d75c44e40452fde4334))
+
 ## [1.0.3](https://github.com/Globberry/keyflow-patches/compare/v1.0.2...v1.0.3) (2026-11-08)
 
 ### 🐛 Bug Fixes
