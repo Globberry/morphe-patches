@@ -86,7 +86,7 @@ val signerPatch = patch(
         ).method.addInstructions(
             0,
             """
-                const-string v0, $CERT_SHA256
+                const-string v0, "$CERT_SHA256"
                 return-object v0
             """.trimIndent()
         )
@@ -100,7 +100,7 @@ val signerPatch = patch(
         ).method.addInstructions(
             0,
             """
-                const-string v0, $NATIVE_KEK
+                const-string v0, "$NATIVE_KEK"
                 return-object v0
             """.trimIndent()
         )
