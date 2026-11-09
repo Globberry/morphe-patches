@@ -4,7 +4,7 @@ patches {
     about {
         name = "Keyflow Patches"
         description = "Patches for Keyflow (com.angkin.keyflow) 1.5.8: PairIP neutering, signer-identity matching, and Pro unlock."
-        source = "https://github.com/keyflow-patches/keyflow"
+        source = "https://github.com/Globberry/morphe-patches"
         author = "Keyflow Patches"
         contact = "na"
         website = "na"
