@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-09T08:57:30",
-  "description": "## [1.1.0](https://github.com/Globberry/morphe-patches/compare/v1.0.7...v1.1.0) (2026-11-09)\n\n### ✨ New Features\n\n* add version-robust [ALL] patches (fingerprint-based) ([4ba6946](https://github.com/Globberry/morphe-patches/commit/4ba69467414463d33330c28bf7cbb6ff3ffb5858))",
-  "download_url": "https://github.com/Globberry/morphe-patches/releases/download/v1.1.0/patches-1.1.0.mpp",
+  "created_at": "2026-11-09T12:55:31",
+  "description": "## [1.2.0](https://github.com/Globberry/morphe-patches/compare/v1.1.0...v1.2.0) (2026-11-09)\n\n### ✨ New Features\n\n* update patches for Keyflow 1.5.10 with version-robust classDefForEach matching ([e49e977](https://github.com/Globberry/morphe-patches/commit/e49e97720f00c96e2e7c8c341e23767f55f347c8))",
+  "download_url": "https://github.com/Globberry/morphe-patches/releases/download/v1.2.0/patches-1.2.0.mpp",
   "signature_download_url": "",
-  "version": "1.1.0"
+  "version": "1.2.0"
 }

@@ -1,3 +1,9 @@
+## [1.2.0](https://github.com/Globberry/morphe-patches/compare/v1.1.0...v1.2.0) (2026-11-09)
+
+### ✨ New Features
+
+* update patches for Keyflow 1.5.10 with version-robust classDefForEach matching ([e49e977](https://github.com/Globberry/morphe-patches/commit/e49e97720f00c96e2e7c8c341e23767f55f347c8))
+
 ## [1.1.0](https://github.com/Globberry/morphe-patches/compare/v1.0.7...v1.1.0) (2026-11-09)
 
 ### ✨ New Features
