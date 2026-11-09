@@ -1,3 +1,9 @@
+## [1.0.7](https://github.com/Globberry/morphe-patches/compare/v1.0.6...v1.0.7) (2026-11-09)
+
+### 🐛 Bug Fixes
+
+* add uhgAYKl2b.xo0eU patch to bypass mx6nK.azrbON Pro state check (always false) ([3d91312](https://github.com/Globberry/morphe-patches/commit/3d913125e6cb5e7897dc5790c2c68390205ed4b4))
+
 ## [1.0.6](https://github.com/Globberry/morphe-patches/compare/v1.0.5...v1.0.6) (2026-11-09)
 
 ### 🐛 Bug Fixes
