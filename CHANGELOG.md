@@ -1,3 +1,9 @@
+## [1.1.0](https://github.com/Globberry/morphe-patches/compare/v1.0.7...v1.1.0) (2026-11-09)
+
+### ✨ New Features
+
+* add version-robust [ALL] patches (fingerprint-based) ([4ba6946](https://github.com/Globberry/morphe-patches/commit/4ba69467414463d33330c28bf7cbb6ff3ffb5858))
+
 ## [1.0.7](https://github.com/Globberry/morphe-patches/compare/v1.0.6...v1.0.7) (2026-11-09)
 
 ### 🐛 Bug Fixes
