@@ -137,5 +137,14 @@ val proPatch = patch(
                 return-object v0
             """.trimIndent()
         )
+
+        // uhgAYKl2b.xo0eU(DoCsWqGhG) -> always return true, bypassing mx6nK.azrbON check
+        // which is initialized to false and never updated to true.
+        Fingerprint(
+            definingClass = "LuhgAYKl2b;",
+            name = "xo0eU",
+            parameters = listOf("LDoCsWqGhG;"),
+            returnType = "Z"
+        ).method.returnEarly(true)
     }
 }
