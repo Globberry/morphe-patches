@@ -1,3 +1,9 @@
+## [1.2.4](https://github.com/Globberry/morphe-patches/compare/v1.2.3...v1.2.4) (2026-11-09)
+
+### 🐛 Bug Fixes
+
+* set f6olX clinit yMQp6hm=true/lSqPRgn=false, fix NMGZ06 to keep lSqPRgn=false, patch lSqPRgn() to return true for export Pro check ([8057905](https://github.com/Globberry/morphe-patches/commit/80579056531b552f2987222ea96f26f5786ba7bf))
+
 ## [1.2.3](https://github.com/Globberry/morphe-patches/compare/v1.2.2...v1.2.3) (2026-11-09)
 
 ### 🐛 Bug Fixes
