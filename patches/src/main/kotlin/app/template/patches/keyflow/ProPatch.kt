@@ -113,5 +113,29 @@ val proPatch = patch(
             parameters = listOf("LDUL3JxrY;"),
             returnType = "Z"
         ).method.returnEarly(true)
+
+        // kjXTc.znlhtRTp() -> always return true (billing client ready), matching the mod.
+        Fingerprint(
+            definingClass = "LkjXTc;",
+            name = "znlhtRTp",
+            parameters = listOf(),
+            returnType = "Z"
+        ).method.returnEarly(true)
+
+        // kjXTc.KEsFip5xs(Activity, E89G7LwNy) -> neuter billing client connect,
+        // return QA6hx2MOZ with result code 0 (success), matching the mod.
+        Fingerprint(
+            definingClass = "LkjXTc;",
+            name = "KEsFip5xs",
+            parameters = listOf("Landroid/app/Activity;", "LE89G7LwNy;"),
+            returnType = "LQA6hx2MOZ;"
+        ).method.addInstructions(
+            0,
+            """
+                new-instance v0, LQA6hx2MOZ;
+                invoke-direct {v0}, Ljava/lang/Object;-><init>()V
+                return-object v0
+            """.trimIndent()
+        )
     }
 }
