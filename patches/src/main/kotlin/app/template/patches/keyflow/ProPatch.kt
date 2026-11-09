@@ -91,6 +91,35 @@ val proPatch = patch(
                         m.returnType == "Z" &&
                         (m.accessFlags and AccessFlags.STATIC.value) != 0
                 }.returnEarly(true)
+
+                // Bypass eFUbX.yMQp6hm() Pro check during export.
+                // f6olX methods GX9XN3ZIZ, MeOIJuj, c3oEd, cdo7kOuyS, eFUbX all call
+                // eFUbX.yMQp6hm(DfY1jDk68) which returns sentinel on non-Pro.
+                // Force return of Boolean.TRUE so the if-ne sentinel check passes.
+                val exportMethods = listOf(
+                    "GX9XN3ZIZ" to listOf("Landroid/content/Context;", "LJmqPgG6WN;", "LbJtamtc;"),
+                    "MeOIJuj" to listOf("Landroid/content/Context;", "LJmqPgG6WN;", "LbJtamtc;"),
+                    "c3oEd" to listOf("Landroid/content/Context;", "Ljava/util/ArrayList;", "LbJtamtc;"),
+                    "cdo7kOuyS" to listOf("Landroid/content/Context;", "Ljava/lang/String;", "Ljava/lang/String;", "LbJtamtc;"),
+                    "eFUbX" to listOf("Landroid/content/Context;", "Ljava/lang/String;", "LbJtamtc;")
+                )
+                for ((mname, mparams) in exportMethods) {
+                    mutable.methods.first { m ->
+                        m.name == mname &&
+                            m.parameters.size == mparams.size &&
+                            m.parameters.zip(mparams).all { (p, t) -> p.type == t } &&
+                            m.returnType == "Ljava/lang/Object;" &&
+                            (m.accessFlags and AccessFlags.STATIC.value) == 0
+                    }.let { method ->
+                        val (cloned, added) = method.addFreeRegisters(1)
+                        cloned.addInstructions(added, """
+                            const/4 v0, 0x1
+                            invoke-static {v0}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
+                            move-result-object v0
+                            return-object v0
+                        """)
+                    }
+                }
             }
         }
 
