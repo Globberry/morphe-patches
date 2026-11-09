@@ -28,7 +28,7 @@ val proPatch = patch(
             if (classDef.type == "Lf6olX;") {
                 val mutable = mutableClassDefBy(classDef)
 
-                // NMGZ06(Context, ArrayList, LbJtamtc;) -> fake confirmation
+                // NMGZ06(Context, ArrayList, LbJtamtc;) -> fake confirmation + force static Pro fields
                 mutable.methods.first { m ->
                     m.name == "NMGZ06" &&
                         m.parameters.size == 3 &&
@@ -38,7 +38,7 @@ val proPatch = patch(
                         m.returnType == "Ljava/lang/Object;" &&
                         (m.accessFlags and AccessFlags.STATIC.value) != 0
                 }.let { method ->
-                    val (cloned, added) = method.addFreeRegisters(4)
+                    val (cloned, added) = method.addFreeRegisters(5)
                     cloned.addInstructions(added, """
                         new-instance v0, LKZr7ww;
                         new-instance v1, LS19NG6;
@@ -46,11 +46,14 @@ val proPatch = patch(
                         const-string v3, ""
                         invoke-direct {v1, v2, v3}, LS19NG6;-><init>(Ljava/lang/String;Ljava/lang/String;)V
                         invoke-direct {v0, v1}, LKZr7ww;-><init>(LS19NG6;)V
+                        const/4 v4, 0x1
+                        sput-boolean v4, Lf6olX;->yMQp6hm:Z
+                        sput-boolean v4, Lf6olX;->lSqPRgn:Z
                         return-object v0
                     """)
                 }
 
-                // yMQp6hm(Context, LbJtamtc;) -> always call NMGZ06
+                // yMQp6hm(Context, LbJtamtc;) -> always call NMGZ06 with proper args
                 mutable.methods.first { m ->
                     m.name == "yMQp6hm" &&
                         m.parameters.size == 2 &&
@@ -59,9 +62,11 @@ val proPatch = patch(
                         m.returnType == "Ljava/lang/Object;" &&
                         (m.accessFlags and AccessFlags.STATIC.value) == 0
                 }.let { method ->
-                    val (cloned, added) = method.addFreeRegisters(1)
+                    val (cloned, added) = method.addFreeRegisters(2)
                     cloned.addInstructions(added, """
-                        invoke-virtual {p0, p1}, Lf6olX;->NMGZ06(Landroid/content/Context;Ljava/util/ArrayList;LbJtamtc;)Ljava/lang/Object;
+                        new-instance v0, Ljava/util/ArrayList;
+                        invoke-direct {v0}, Ljava/util/ArrayList;-><init>()V
+                        invoke-virtual {p1, v0, p2}, Lf6olX;->NMGZ06(Landroid/content/Context;Ljava/util/ArrayList;LbJtamtc;)Ljava/lang/Object;
                         move-result-object p0
                         return-object p0
                     """)
