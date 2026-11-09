@@ -28,6 +28,17 @@ val proPatch = patch(
             if (classDef.type == "Lf6olX;") {
                 val mutable = mutableClassDefBy(classDef)
 
+                // <clinit>()V -> force yMQp6hm=true, lSqPRgn=false so lSqPRgn() returns true
+                val (clinitCloned, clinitAdded) = mutable.methods.first { m ->
+                    m.name == "<clinit>" && m.parameters.isEmpty() && m.returnType == "V" && (m.accessFlags and AccessFlags.STATIC.value) != 0
+                }.addFreeRegisters(2)
+                clinitCloned.addInstructions(clinitAdded, """
+                    const/4 v0, 0x1
+                    sput-boolean v0, Lf6olX;->yMQp6hm:Z
+                    const/4 v0, 0x0
+                    sput-boolean v0, Lf6olX;->lSqPRgn:Z
+                """)
+
                 // NMGZ06(Context, ArrayList, LbJtamtc;) -> fake confirmation + force static Pro fields
                 mutable.methods.first { m ->
                     m.name == "NMGZ06" &&
@@ -48,6 +59,7 @@ val proPatch = patch(
                         invoke-direct {v0, v1}, LKZr7ww;-><init>(LS19NG6;)V
                         const/4 v4, 0x1
                         sput-boolean v4, Lf6olX;->yMQp6hm:Z
+                        const/4 v4, 0x0
                         sput-boolean v4, Lf6olX;->lSqPRgn:Z
                         return-object v0
                     """)
@@ -71,6 +83,14 @@ val proPatch = patch(
                         return-object p0
                     """)
                 }
+
+                // lSqPrgn()Z -> always return true (so NMGZ06() proceeds)
+                mutable.methods.first { m ->
+                    m.name == "lSqPRgn" &&
+                        m.parameters.isEmpty() &&
+                        m.returnType == "Z" &&
+                        (m.accessFlags and AccessFlags.STATIC.value) != 0
+                }.returnEarly(true)
             }
         }
 
