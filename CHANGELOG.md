@@ -1,3 +1,9 @@
+## [1.0.6](https://github.com/Globberry/morphe-patches/compare/v1.0.5...v1.0.6) (2026-11-09)
+
+### 🐛 Bug Fixes
+
+* add kjXTc billing client patches (znlhtRTp=true, KEsFip5xs neutered) to match mod ([d9da17a](https://github.com/Globberry/morphe-patches/commit/d9da17a4f6bf569062ee367634ebc926bf807d9e))
+
 ## [1.0.5](https://github.com/Globberry/keyflow-patches/compare/v1.0.4...v1.0.5) (2026-11-08)
 
 ### 🐛 Bug Fixes
