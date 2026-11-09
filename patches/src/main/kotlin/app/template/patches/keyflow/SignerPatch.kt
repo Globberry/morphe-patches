@@ -61,6 +61,15 @@ val signerPatch = patch(
                         m.returnType == "Z" &&
                         (m.accessFlags and AccessFlags.STATIC.value) == 0
                 }.returnEarly(true)
+
+                // Force the c3oEd static boolean field to true (checked directly by mMDNzWiQL)
+                val (clinitCloned, clinitAdded) = mutable.methods.first { m ->
+                    m.name == "<clinit>" && m.parameters.isEmpty() && m.returnType == "V" && (m.accessFlags and AccessFlags.STATIC.value) != 0
+                }.addFreeRegisters(1)
+                clinitCloned.addInstructions(clinitAdded, """
+                    const/4 v0, 0x1
+                    sput-boolean v0, Lcom/angkin/keyflow/nativeverify/NativeIdentity;->c3oEd:Z
+                """)
             }
         }
 

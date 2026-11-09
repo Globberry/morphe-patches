@@ -304,7 +304,7 @@ val proPatch = patch(
                     cloned.addInstructions(added, """
                         const/4 v0, 0x1
                         sput-boolean v0, LuHQuORIu;->yMQp6hm:Z
-                        sget-object v1, LuHQuORIu;->NMGZ06:LzVrIN6fwb;
+                        sget-object v1, LuHQuORIu;->GX9XN3ZIZ:LzVrIN6fwb;
                         const/4 v2, 0x0
                         const/4 v3, 0x1
                         invoke-static {v3}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
