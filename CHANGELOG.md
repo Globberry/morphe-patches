@@ -1,3 +1,9 @@
+## [1.2.5](https://github.com/Globberry/morphe-patches/compare/v1.2.4...v1.2.5) (2026-11-09)
+
+### 🐛 Bug Fixes
+
+* force return Boolean.TRUE in f6olX export-critical methods (GX9XN3ZIZ, MeOIJuj, c3oEd, cdo7kOuyS, eFUbX) to bypass eFUbX.yMQp6hm Pro check during premium export ([cd12c04](https://github.com/Globberry/morphe-patches/commit/cd12c04160dd380841c8409e97013e076dc235b2))
+
 ## [1.2.4](https://github.com/Globberry/morphe-patches/compare/v1.2.3...v1.2.4) (2026-11-09)
 
 ### 🐛 Bug Fixes
