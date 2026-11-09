@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-09T16:00:42",
-  "description": "## [1.2.2](https://github.com/Globberry/morphe-patches/compare/v1.2.1...v1.2.2) (2026-11-09)\n\n### 🐛 Bug Fixes\n\n* set NativeIdentity.c3oEd field=true and fix NMGZ06 to publish to GX9XN3ZIZ field for 1.5.10 Pro unlock ([32b22b8](https://github.com/Globberry/morphe-patches/commit/32b22b8f89aff6dd7fa7de4668850189caaac125))",
-  "download_url": "https://github.com/Globberry/morphe-patches/releases/download/v1.2.2/patches-1.2.2.mpp",
+  "created_at": "2026-11-09T22:25:23",
+  "description": "## [1.2.3](https://github.com/Globberry/morphe-patches/compare/v1.2.2...v1.2.3) (2026-11-09)\n\n### 🐛 Bug Fixes\n\n* set f6olX static yMQp6hm/lSqPRgn fields and fix yMQp6hm() NMGZ06 call params for export Pro check ([630aa2a](https://github.com/Globberry/morphe-patches/commit/630aa2a91ed47a753bcbe9d49034f79f44abf151))",
+  "download_url": "https://github.com/Globberry/morphe-patches/releases/download/v1.2.3/patches-1.2.3.mpp",
   "signature_download_url": "",
-  "version": "1.2.2"
+  "version": "1.2.3"
 }

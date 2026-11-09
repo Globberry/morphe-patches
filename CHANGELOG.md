@@ -1,3 +1,9 @@
+## [1.2.3](https://github.com/Globberry/morphe-patches/compare/v1.2.2...v1.2.3) (2026-11-09)
+
+### 🐛 Bug Fixes
+
+* set f6olX static yMQp6hm/lSqPRgn fields and fix yMQp6hm() NMGZ06 call params for export Pro check ([630aa2a](https://github.com/Globberry/morphe-patches/commit/630aa2a91ed47a753bcbe9d49034f79f44abf151))
+
 ## [1.2.2](https://github.com/Globberry/morphe-patches/compare/v1.2.1...v1.2.2) (2026-11-09)
 
 ### 🐛 Bug Fixes
