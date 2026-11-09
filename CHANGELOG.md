@@ -1,3 +1,9 @@
+## [1.2.1](https://github.com/Globberry/morphe-patches/compare/v1.2.0...v1.2.1) (2026-11-09)
+
+### 🐛 Bug Fixes
+
+* correct uHQuORIu class name case and NMGZ06 patch for 1.5.10 Pro unlock ([13718f6](https://github.com/Globberry/morphe-patches/commit/13718f6562aecf0c2f09aa3ce8f2c68b8fd68b1c))
+
 ## [1.2.0](https://github.com/Globberry/morphe-patches/compare/v1.1.0...v1.2.0) (2026-11-09)
 
 ### ✨ New Features
