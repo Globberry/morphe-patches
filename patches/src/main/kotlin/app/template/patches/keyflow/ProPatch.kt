@@ -257,13 +257,13 @@ val proPatch = patch(
         }
 
         // ========================================================================
-        // 6. uHQuOrIu: Force Pro state at the central level
+        // 6. uHQuORIu: Force Pro state at the central level
         //    - GX9XN3ZIZ() always returns a valid LuenIfX receipt
         //    - c3oEd() no-op (don't expire Pro after 3 days)
-        //    - NMGZ06() force yMQp6hm=true and GX9XN3ZIZ=TRUE
+        //    - NMGZ06() force yMQp6hm=true and publish TRUE to NMGZ06 field
         // ========================================================================
         classDefForEach { classDef: ClassDef ->
-            if (classDef.type == "LuHQuOrIu;") {
+            if (classDef.type == "LuHQuORIu;") {
                 val mutable = mutableClassDefBy(classDef)
                 val luenIfXName = findClassByName("LuenIfX;")
                 val zVrIN6fwbName = findClassByName("LzVrIN6fwb;")
@@ -303,12 +303,13 @@ val proPatch = patch(
                     val (cloned, added) = method.addFreeRegisters(4)
                     cloned.addInstructions(added, """
                         const/4 v0, 0x1
-                        sput-boolean v0, LuHQuOrIu;->yMQp6hm:Z
-                        sget-object v1, LuHQuOrIu;->$zVrIN6fwbName:L$zVrIN6fwbName;
-                        invoke-static {}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
-                        move-result-object v1
+                        sput-boolean v0, LuHQuORIu;->yMQp6hm:Z
+                        sget-object v1, LuHQuORIu;->NMGZ06:LzVrIN6fwb;
                         const/4 v2, 0x0
-                        invoke-virtual {v1, v2, v1}, $zVrIN6fwbName->Ei8C6JWM(Ljava/lang/Object;Ljava/lang/Object;)Z
+                        const/4 v3, 0x1
+                        invoke-static {v3}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
+                        move-result-object v3
+                        invoke-virtual {v1, v2, v3}, $zVrIN6fwbName->Ei8C6JWM(Ljava/lang/Object;Ljava/lang/Object;)Z
                         return-void
                     """)
                 }
