@@ -1,3 +1,9 @@
+## [1.2.2](https://github.com/Globberry/morphe-patches/compare/v1.2.1...v1.2.2) (2026-11-09)
+
+### 🐛 Bug Fixes
+
+* set NativeIdentity.c3oEd field=true and fix NMGZ06 to publish to GX9XN3ZIZ field for 1.5.10 Pro unlock ([32b22b8](https://github.com/Globberry/morphe-patches/commit/32b22b8f89aff6dd7fa7de4668850189caaac125))
+
 ## [1.2.1](https://github.com/Globberry/morphe-patches/compare/v1.2.0...v1.2.1) (2026-11-09)
 
 ### 🐛 Bug Fixes
