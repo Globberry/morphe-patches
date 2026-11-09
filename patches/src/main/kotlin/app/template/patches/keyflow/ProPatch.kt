@@ -255,6 +255,66 @@ val proPatch = patch(
                 }.returnEarly(true)
             }
         }
+
+        // ========================================================================
+        // 6. uHQuOrIu: Force Pro state at the central level
+        //    - GX9XN3ZIZ() always returns a valid LuenIfX receipt
+        //    - c3oEd() no-op (don't expire Pro after 3 days)
+        //    - NMGZ06() force yMQp6hm=true and GX9XN3ZIZ=TRUE
+        // ========================================================================
+        classDefForEach { classDef: ClassDef ->
+            if (classDef.type == "LuHQuOrIu;") {
+                val mutable = mutableClassDefBy(classDef)
+                val luenIfXName = findClassByName("LuenIfX;")
+                val zVrIN6fwbName = findClassByName("LzVrIN6fwb;")
+
+                // GX9XN3ZIZ()LuenIfX; -> always return new LuenIfX("", "")
+                mutable.methods.first { m ->
+                    m.name == "GX9XN3ZIZ" &&
+                        m.parameters.isEmpty() &&
+                        m.returnType == "LuenIfX;" &&
+                        (m.accessFlags and AccessFlags.STATIC.value) != 0
+                }.let { method ->
+                    val (cloned, added) = method.addFreeRegisters(3)
+                    cloned.addInstructions(added, """
+                        new-instance v0, $luenIfXName
+                        const-string v1, ""
+                        const-string v2, ""
+                        invoke-direct {v0, v1, v2}, $luenIfXName-><init>(Ljava/lang/String;Ljava/lang/String;)V
+                        return-object v0
+                    """)
+                }
+
+                // c3oEd()V -> no-op (don't expire Pro)
+                mutable.methods.first { m ->
+                    m.name == "c3oEd" &&
+                        m.parameters.isEmpty() &&
+                        m.returnType == "V" &&
+                        (m.accessFlags and AccessFlags.STATIC.value) != 0
+                }.returnEarly()
+
+                // NMGZ06()V -> force yMQp6hm=true and GX9XN3ZIZ=TRUE
+                mutable.methods.first { m ->
+                    m.name == "NMGZ06" &&
+                        m.parameters.isEmpty() &&
+                        m.returnType == "V" &&
+                        (m.accessFlags and AccessFlags.STATIC.value) != 0
+                }.let { method ->
+                    val (cloned, added) = method.addFreeRegisters(4)
+                    cloned.addInstructions(added, """
+                        const/4 v0, 0x1
+                        sput-boolean v0, LuHQuOrIu;->yMQp6hm:Z
+                        sget-object v1, LuHQuOrIu;->$zVrIN6fwbName:L$zVrIN6fwbName;
+                        invoke-static {}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
+                        move-result-object v1
+                        const/4 v2, 0x0
+                        invoke-virtual {v1, v2, v1}, $zVrIN6fwbName->Ei8C6JWM(Ljava/lang/Object;Ljava/lang/Object;)Z
+                        return-void
+                    """)
+                }
+            }
+        }
+
     }
 }
 
