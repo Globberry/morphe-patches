@@ -1,3 +1,9 @@
+## [1.2.13](https://github.com/Globberry/morphe-patches/compare/v1.2.12...v1.2.13) (2026-11-10)
+
+### 🐛 Bug Fixes
+
+* patch uHQuORIu.yMQp6hm() to set yMQp6hm=true (fixes settings Pro tab); fix f6olX export patches with addFreeRegisters (but f6olX is in classes4.dex, not accessible via Morphe) ([1822375](https://github.com/Globberry/morphe-patches/commit/182237544b459a16d0d4d432c302937c55f7d848))
+
 ## [1.2.12](https://github.com/Globberry/morphe-patches/compare/v1.2.11...v1.2.12) (2026-11-10)
 
 ### 🐛 Bug Fixes

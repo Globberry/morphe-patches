@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-10T10:00:22",
-  "description": "## [1.2.12](https://github.com/Globberry/morphe-patches/compare/v1.2.11...v1.2.12) (2026-11-10)\n\n### 🐛 Bug Fixes\n\n* remove non-functional f6olX patches (classes in classes4.dex); keep uHQuOrIu, mx6nK, kjXTc, uhgAYKl2b patches for Pro state unlock ([bddce74](https://github.com/Globberry/morphe-patches/commit/bddce74c11046f3b51d4c073903c14472262d421))",
-  "download_url": "https://github.com/Globberry/morphe-patches/releases/download/v1.2.12/patches-1.2.12.mpp",
+  "created_at": "2026-11-10T11:24:50",
+  "description": "## [1.2.13](https://github.com/Globberry/morphe-patches/compare/v1.2.12...v1.2.13) (2026-11-10)\n\n### 🐛 Bug Fixes\n\n* patch uHQuORIu.yMQp6hm() to set yMQp6hm=true (fixes settings Pro tab); fix f6olX export patches with addFreeRegisters (but f6olX is in classes4.dex, not accessible via Morphe) ([1822375](https://github.com/Globberry/morphe-patches/commit/182237544b459a16d0d4d432c302937c55f7d848))",
+  "download_url": "https://github.com/Globberry/morphe-patches/releases/download/v1.2.13/patches-1.2.13.mpp",
   "signature_download_url": "",
-  "version": "1.2.12"
+  "version": "1.2.13"
 }
