@@ -65,7 +65,8 @@ val proPatch = patch(
                     """)
                 }
 
-                // yMQp6hm(Context, LbJtamtc;) -> always call NMGZ06 with proper args
+                // yMQp6hm(Context, LbJtamtc;) -> return Boolean.TRUE directly (Pro active)
+                // Callers check if-ne v2, sentinel; returning Boolean.TRUE passes the check
                 mutable.methods.first { m ->
                     m.name == "yMQp6hm" &&
                         m.parameters.size == 2 &&
@@ -74,13 +75,12 @@ val proPatch = patch(
                         m.returnType == "Ljava/lang/Object;" &&
                         (m.accessFlags and AccessFlags.STATIC.value) == 0
                 }.let { method ->
-                    val (cloned, added) = method.addFreeRegisters(2)
+                    val (cloned, added) = method.addFreeRegisters(1)
                     cloned.addInstructions(added, """
-                        new-instance v0, Ljava/util/ArrayList;
-                        invoke-direct {v0}, Ljava/util/ArrayList;-><init>()V
-                        invoke-virtual {p1, v0, p2}, Lf6olX;->NMGZ06(Landroid/content/Context;Ljava/util/ArrayList;LbJtamtc;)Ljava/lang/Object;
-                        move-result-object p0
-                        return-object p0
+                        const/4 v0, 0x1
+                        invoke-static {v0}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
+                        move-result-object v0
+                        return-object v0
                     """)
                 }
 
