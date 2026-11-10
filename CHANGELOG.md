@@ -1,3 +1,10 @@
+## [1.2.14](https://github.com/Globberry/morphe-patches/compare/v1.2.13...v1.2.14) (2026-11-10)
+
+### 🐛 Bug Fixes
+
+* add Keyflow f6olX export unlock goto patch for 1.5.10 ([678e71c](https://github.com/Globberry/morphe-patches/commit/678e71c03236ee344e5fce17736d4a617e682578))
+* correct f6olX export unlock patch Kotlin API usage ([ecd3a84](https://github.com/Globberry/morphe-patches/commit/ecd3a84fa90d1dbbc1da0fb8c4049bc90cc55a7d))
+
 ## [1.2.13](https://github.com/Globberry/morphe-patches/compare/v1.2.12...v1.2.13) (2026-11-10)
 
 ### 🐛 Bug Fixes
