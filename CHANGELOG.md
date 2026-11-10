@@ -1,3 +1,9 @@
+## [1.3.1](https://github.com/Globberry/morphe-patches/compare/v1.3.0...v1.3.1) (2026-11-10)
+
+### 🐛 Bug Fixes
+
+* make LuHQuORIu.yMQp6hm() a complete no-op to prevent Pro reset after opening a project ([64f283f](https://github.com/Globberry/morphe-patches/commit/64f283f300e9a4456cb3fb50c611d2c32721b6d8))
+
 ## [1.3.0](https://github.com/Globberry/morphe-patches/compare/v1.2.15...v1.3.0) (2026-11-10)
 
 ### ✨ New Features
