@@ -86,12 +86,13 @@ val proPatch = patch(
                         (m.accessFlags and AccessFlags.STATIC.value) != 0
                 }.returnEarly(true)
 
-                // Bypass v5YtiUtD.yMQp6hm() sentinel check in f6olX export methods.
                 // Patch ALL Object-returning methods in f6olX to return Boolean.TRUE at
-                // position 0, so they return before reaching the if-ne sentinel check.
+                // position 0, so they return before reaching the if-ne sentinel check
+                // (goto :goto_aX after if-ne v2, v4).
                 mutable.methods.forEach { m ->
                     if (m.returnType.toString() == "Ljava/lang/Object;") {
-                        m.addInstructions(0, """
+                        val (cloned, added) = m.addFreeRegisters(1)
+                        cloned.addInstructions(added, """
                             const/4 v0, 0x1
                             invoke-static {v0}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
                             move-result-object v0
@@ -99,6 +100,24 @@ val proPatch = patch(
                         """)
                     }
                 }
+            }
+        }
+
+        // Patch uHQuORIu.yMQp6hm() to set yMQp6hm static field = true
+        // This fixes the settings Pro tab "modified app" message.
+        classDefForEach { classDef: ClassDef ->
+            if (classDef.type == "LuHQuORIu;") {
+                val mutable = mutableClassDefBy(classDef)
+                val (yMq6hmCloned, yMq6hmAdded) = mutable.methods.first { m ->
+                    m.name == "yMQp6hm" &&
+                        m.parameters.isEmpty() &&
+                        m.returnType == "V" &&
+                        (m.accessFlags and AccessFlags.STATIC.value) != 0
+                }.addFreeRegisters(1)
+                yMq6hmCloned.addInstructions(yMq6hmAdded, """
+                    const/4 v0, 0x1
+                    sput-boolean v0, LuHQuORIu;->yMQp6hm:Z
+                """)
             }
         }
 
