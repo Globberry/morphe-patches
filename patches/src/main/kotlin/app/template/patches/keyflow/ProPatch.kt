@@ -106,21 +106,18 @@ val proPatch = patch(
             }
         }
 
-        // Patch uHQuORIu.yMQp6hm() to set yMQp6hm static field = true
-        // This fixes the settings Pro tab "modified app" message.
+        // Patch uHQuORIu.yMQp6hm() to be a complete no-op.
+        // This is called by mMDNzWiQL and P0JcGi9 when the signer check fails,
+        // which resets Pro state. Making it no-op prevents Pro from being reset.
         classDefForEach { classDef: ClassDef ->
             if (classDef.type == "LuHQuORIu;") {
                 val mutable = mutableClassDefBy(classDef)
-                val (yMq6hmCloned, yMq6hmAdded) = mutable.methods.first { m ->
+                mutable.methods.first { m ->
                     m.name == "yMQp6hm" &&
                         m.parameters.isEmpty() &&
                         m.returnType == "V" &&
                         (m.accessFlags and AccessFlags.STATIC.value) != 0
-                }.addFreeRegisters(1)
-                yMq6hmCloned.addInstructions(yMq6hmAdded, """
-                    const/4 v0, 0x1
-                    sput-boolean v0, LuHQuORIu;->yMQp6hm:Z
-                """)
+                }.returnEarly()
             }
         }
 
