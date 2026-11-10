@@ -84,37 +84,28 @@ val proPatch = patch(
                         m.returnType == "Z" &&
                         (m.accessFlags and AccessFlags.STATIC.value) != 0
                 }.returnEarly(true)
-            }
-        }
 
-        // ========================================================================
-        // Patch any class with yMQp6hm()Ljava/lang/Object; (except f6olX which is
-        // already patched above) - this covers eFUbX.yMQp6hm() = Lv5YtyUtD.yMQp6hm(DfY1jDk68)
-        // called during premium export. Force return Boolean.TRUE (non-sentinel) so
-        // the if-ne sentinel check passes and export proceeds.
-        // ========================================================================
-        classDefForEach { classDef: ClassDef ->
-            if (classDef.type != "Lf6olX;") {
-                val hasYmqp6hmObj = classDef.methods.any { m ->
-                    m.name == "yMQp6hm" &&
-                        m.parameters.size == 1 &&
-                        m.parameters[0].type == "LDfY1jDk68;" &&
-                        m.returnType == "Ljava/lang/Object;" &&
-                        (m.accessFlags and AccessFlags.STATIC.value) == 0 &&
-                        (m.accessFlags and AccessFlags.NATIVE.value) == 0 &&
-                        (m.accessFlags and AccessFlags.ABSTRACT.value) == 0
-                }
-                if (hasYmqp6hmObj) {
-                    val mutable = mutableClassDefBy(classDef)
+                // Bypass eFUbX.yMQp6hm() sentinel check in f6olX export-critical methods.
+                // These methods call v5YtyUtD.yMQp6hm() internally and check result vs sentinel.
+                // Force return Boolean.TRUE at method entry so they never reach the
+                // v5YtyUtD.yMQp6hm() call and never break v5YtyUtD.MeOIJuj mutex logic.
+                val exportMethods = listOf(
+                    "GX9XN3ZIZ" to listOf("Landroid/content/Context;", "LJmqPgG6WN;", "LbJtamtc;"),
+                    "MeOIJuj" to listOf("Landroid/content/Context;", "LJmqPgG6WN;", "LbJtamtc;"),
+                    "c3oEd" to listOf("Landroid/content/Context;", "Ljava/util/ArrayList;", "LbJtamtc;"),
+                    "cdo7kOuyS" to listOf("Landroid/content/Context;", "Ljava/lang/String;", "Ljava/lang/String;", "LbJtamtc;"),
+                    "eFUbX" to listOf("Landroid/content/Context;", "Ljava/lang/String;", "LbJtamtc;")
+                )
+                for ((mname, mparams) in exportMethods) {
                     mutable.methods.first { m ->
-                        m.name == "yMQp6hm" &&
-                            m.parameters.size == 1 &&
-                            m.parameters[0].type == "LDfY1jDk68;" &&
+                        m.name == mname &&
+                            m.parameters.size == mparams.size &&
+                            m.parameters.zip(mparams).all { (p, t) -> p.type == t } &&
                             m.returnType == "Ljava/lang/Object;" &&
                             (m.accessFlags and AccessFlags.STATIC.value) == 0
                     }.let { method ->
                         val (cloned, added) = method.addFreeRegisters(1)
-                        cloned.addInstructions(added, """
+                        cloned.addInstructions(0, """
                             const/4 v0, 0x1
                             invoke-static {v0}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
                             move-result-object v0
@@ -126,8 +117,40 @@ val proPatch = patch(
         }
 
         // ========================================================================
-        // 2. mx6nK equivalent: class with static boolean field + time-checking methods
+        // Patch any yMQp6hm()Ljava/lang/Object; method (except f6olX) called during
+        // premium export. Force return Boolean.FALSE (non-sentinel) so the if-ne
+        // sentinel check passes and export proceeds. Using FALSE avoids mutex crash.
         // ========================================================================
+        classDefForEach { classDef: ClassDef ->
+            if (classDef.type != "Lf6olX;") {
+                val hasYmqp6hmObj = classDef.methods.any { m ->
+                    m.name == "yMQp6hm" &&
+                        m.returnType == "Ljava/lang/Object;" &&
+                        (m.accessFlags and AccessFlags.STATIC.value) == 0 &&
+                        (m.accessFlags and AccessFlags.NATIVE.value) == 0 &&
+                        (m.accessFlags and AccessFlags.ABSTRACT.value) == 0
+                }
+                if (hasYmqp6hmObj) {
+                    val mutable = mutableClassDefBy(classDef)
+                    mutable.methods.first { m ->
+                        m.name == "yMQp6hm" &&
+                            m.returnType == "Ljava/lang/Object;" &&
+                            (m.accessFlags and AccessFlags.STATIC.value) == 0
+                    }.let { method ->
+                        val (cloned, added) = method.addFreeRegisters(1)
+                        cloned.addInstructions(added, """
+                            const/4 v0, 0x0
+                            invoke-static {v0}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
+                            move-result-object v0
+                            return-object v0
+                        """)
+                    }
+                }
+            }
+        }
+
+        // ========================================================================
+        // 2. mx6nK equivalent: class with static boolean field + time-checking methods
         var mx6nK: ClassDef? = null
         classDefForEach { classDef: ClassDef ->
             val hasStaticBoolean = classDef.fields.any { f ->
