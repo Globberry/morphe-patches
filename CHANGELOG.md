@@ -1,3 +1,9 @@
+## [1.2.10](https://github.com/Globberry/morphe-patches/compare/v1.2.9...v1.2.10) (2026-11-10)
+
+### 🐛 Bug Fixes
+
+* remove catch-all yMQp6hm patch that crashed with Boolean cast to Runnable; keep only f6olX-specific patches (yMQp6hm=Boolean.TRUE, NMGZ06=Boolean.TRUE, lSqPRgn=true, yMQp6hm field=false) ([39aa0a3](https://github.com/Globberry/morphe-patches/commit/39aa0a3dac78f5d669695d5852287c0e065ca972))
+
 ## [1.2.9](https://github.com/Globberry/morphe-patches/compare/v1.2.8...v1.2.9) (2026-11-10)
 
 ### 🐛 Bug Fixes
