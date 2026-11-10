@@ -28,18 +28,18 @@ val proPatch = patch(
             if (classDef.type == "Lf6olX;") {
                 val mutable = mutableClassDefBy(classDef)
 
-                // <clinit>()V -> force yMQp6hm=true, lSqPRgn=false so lSqPRgn() returns true
+                // <clinit>()V -> yMQp6hm=false (so yMQp6hm() doesn't return sentinel/block), lSqPRgn=false
                 val (clinitCloned, clinitAdded) = mutable.methods.first { m ->
                     m.name == "<clinit>" && m.parameters.isEmpty() && m.returnType == "V" && (m.accessFlags and AccessFlags.STATIC.value) != 0
                 }.addFreeRegisters(2)
                 clinitCloned.addInstructions(clinitAdded, """
-                    const/4 v0, 0x1
+                    const/4 v0, 0x0
                     sput-boolean v0, Lf6olX;->yMQp6hm:Z
                     const/4 v0, 0x0
                     sput-boolean v0, Lf6olX;->lSqPRgn:Z
                 """)
 
-                // NMGZ06(Context, ArrayList, LbJtamtc;) -> fake confirmation + force static Pro fields
+                // NMGZ06(Context, ArrayList, LbJtamtc;) -> return Boolean.TRUE (non-sentinel, passes check-cast)
                 mutable.methods.first { m ->
                     m.name == "NMGZ06" &&
                         m.parameters.size == 3 &&
@@ -49,18 +49,11 @@ val proPatch = patch(
                         m.returnType == "Ljava/lang/Object;" &&
                         (m.accessFlags and AccessFlags.STATIC.value) != 0
                 }.let { method ->
-                    val (cloned, added) = method.addFreeRegisters(5)
+                    val (cloned, added) = method.addFreeRegisters(1)
                     cloned.addInstructions(added, """
-                        new-instance v0, LKZr7ww;
-                        new-instance v1, LS19NG6;
-                        const-string v2, ""
-                        const-string v3, ""
-                        invoke-direct {v1, v2, v3}, LS19NG6;-><init>(Ljava/lang/String;Ljava/lang/String;)V
-                        invoke-direct {v0, v1}, LKZr7ww;-><init>(LS19NG6;)V
-                        const/4 v4, 0x1
-                        sput-boolean v4, Lf6olX;->yMQp6hm:Z
-                        const/4 v4, 0x0
-                        sput-boolean v4, Lf6olX;->lSqPRgn:Z
+                        const/4 v0, 0x1
+                        invoke-static {v0}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
+                        move-result-object v0
                         return-object v0
                     """)
                 }
@@ -91,23 +84,26 @@ val proPatch = patch(
                         m.returnType == "Z" &&
                         (m.accessFlags and AccessFlags.STATIC.value) != 0
                 }.returnEarly(true)
+            }
+        }
 
-                // Bypass eFUbX.yMQp6hm() Pro check during export.
-                // f6olX methods GX9XN3ZIZ, MeOIJuj, c3oEd, cdo7kOuyS, eFUbX all call
-                // eFUbX.yMQp6hm(DfY1jDk68) which returns sentinel on non-Pro.
-                // Force return of Boolean.TRUE so the if-ne sentinel check passes.
-                val exportMethods = listOf(
-                    "GX9XN3ZIZ" to listOf("Landroid/content/Context;", "LJmqPgG6WN;", "LbJtamtc;"),
-                    "MeOIJuj" to listOf("Landroid/content/Context;", "LJmqPgG6WN;", "LbJtamtc;"),
-                    "c3oEd" to listOf("Landroid/content/Context;", "Ljava/util/ArrayList;", "LbJtamtc;"),
-                    "cdo7kOuyS" to listOf("Landroid/content/Context;", "Ljava/lang/String;", "Ljava/lang/String;", "LbJtamtc;"),
-                    "eFUbX" to listOf("Landroid/content/Context;", "Ljava/lang/String;", "LbJtamtc;")
-                )
-                for ((mname, mparams) in exportMethods) {
+        // ========================================================================
+        // Patch any class with yMQp6hm()Ljava/lang/Object; (except f6olX which is
+        // already patched above) - this covers eFUbX.yMQp6hm() = Lv5YtyUtD.yMQp6hm(DfY1jDk68)
+        // called during premium export. Force return Boolean.TRUE (non-sentinel) so
+        // the if-ne sentinel check passes and export proceeds.
+        // ========================================================================
+        classDefForEach { classDef: ClassDef ->
+            if (classDef.type != "Lf6olX;") {
+                val hasYmqp6hmObj = classDef.methods.any { m ->
+                    m.name == "yMQp6hm" &&
+                        m.returnType == "Ljava/lang/Object;" &&
+                        (m.accessFlags and AccessFlags.STATIC.value) == 0
+                }
+                if (hasYmqp6hmObj) {
+                    val mutable = mutableClassDefBy(classDef)
                     mutable.methods.first { m ->
-                        m.name == mname &&
-                            m.parameters.size == mparams.size &&
-                            m.parameters.zip(mparams).all { (p, t) -> p.type == t } &&
+                        m.name == "yMQp6hm" &&
                             m.returnType == "Ljava/lang/Object;" &&
                             (m.accessFlags and AccessFlags.STATIC.value) == 0
                     }.let { method ->
