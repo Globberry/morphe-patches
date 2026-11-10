@@ -1,3 +1,9 @@
+## [1.3.2](https://github.com/Globberry/morphe-patches/compare/v1.3.1...v1.3.2) (2026-11-10)
+
+### 🐛 Bug Fixes
+
+* bypass Pro gate in export pipeline (kCg72Z4t) ([9700f07](https://github.com/Globberry/morphe-patches/commit/9700f07090d063e0ec0a0f01e6b8223861d3a486))
+
 ## [1.3.1](https://github.com/Globberry/morphe-patches/compare/v1.3.0...v1.3.1) (2026-11-10)
 
 ### 🐛 Bug Fixes
