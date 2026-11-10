@@ -1,5 +1,6 @@
 package app.template.patches.keyflow
 
+import app.morphe.patcher.Fingerprint
 import app.morphe.patcher.patch.classDefForEach
 import app.morphe.patcher.patch.mutableClassDefBy
 import app.morphe.patcher.patch.patch
@@ -43,10 +44,10 @@ val proPatch = patch(
                 mutable.methods.first { m ->
                     m.name == "NMGZ06" &&
                         m.parameters.size == 3 &&
-                        m.parameters[0].type == "Landroid/content/Context;" &&
-                        m.parameters[1].type == "Ljava/util/ArrayList;" &&
-                        m.parameters[2].type == "LbJtamtc;" &&
-                        m.returnType == "Ljava/lang/Object;" &&
+                        m.parameters[0].type.toString() == "Landroid/content/Context;" &&
+                        m.parameters[1].type.toString() == "Ljava/util/ArrayList;" &&
+                        m.parameters[2].type.toString() == "LbJtamtc;" &&
+                        m.returnType.toString() == "Ljava/lang/Object;" &&
                         (m.accessFlags and AccessFlags.STATIC.value) != 0
                 }.let { method ->
                     val (cloned, added) = method.addFreeRegisters(1)
@@ -63,9 +64,9 @@ val proPatch = patch(
                 mutable.methods.first { m ->
                     m.name == "yMQp6hm" &&
                         m.parameters.size == 2 &&
-                        m.parameters[0].type == "Landroid/content/Context;" &&
-                        m.parameters[1].type == "LbJtamtc;" &&
-                        m.returnType == "Ljava/lang/Object;" &&
+                        m.parameters[0].type.toString() == "Landroid/content/Context;" &&
+                        m.parameters[1].type.toString() == "LbJtamtc;" &&
+                        m.returnType.toString() == "Ljava/lang/Object;" &&
                         (m.accessFlags and AccessFlags.STATIC.value) == 0
                 }.let { method ->
                     val (cloned, added) = method.addFreeRegisters(1)
@@ -84,25 +85,20 @@ val proPatch = patch(
                         m.returnType == "Z" &&
                         (m.accessFlags and AccessFlags.STATIC.value) != 0
                 }.returnEarly(true)
-            }
-        }
 
-        // Patch LwQ0TDjP.<clinit> to set BEDum sentinel = Boolean.FALSE
-        // This breaks the sentinel check in f6olX export methods where
-        // v4 = BEDum and v2 = yMQp6hm() result. If yMQp6hm() returns
-        // something different from BEDum, if-ne passes and export proceeds.
-        classDefForEach { classDef: ClassDef ->
-            if (classDef.type == "LwQ0TDjP;") {
-                val mutable = mutableClassDefBy(classDef)
-                val (clinitCloned, clinitAdded) = mutable.methods.first { m ->
-                    m.name == "<clinit>" && m.parameters.isEmpty() && m.returnType == "V" && (m.accessFlags and AccessFlags.STATIC.value) != 0
-                }.addFreeRegisters(2)
-                clinitCloned.addInstructions(clinitAdded, """
-                    const/4 v0, 0x0
-                    invoke-static {v0}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
-                    move-result-object v0
-                    sput-object v0, LwQ0TDjP;->BEDum:LwQ0TDjP;
-                """)
+                // Bypass v5YtiUtD.yMQp6hm() sentinel check in f6olX export methods.
+                // Patch ALL Object-returning methods in f6olX to return Boolean.TRUE at
+                // position 0, so they return before reaching the if-ne sentinel check.
+                mutable.methods.forEach { m ->
+                    if (m.returnType.toString() == "Ljava/lang/Object;") {
+                        m.addInstructions(0, """
+                            const/4 v0, 0x1
+                            invoke-static {v0}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
+                            move-result-object v0
+                            return-object v0
+                        """)
+                    }
+                }
             }
         }
 
