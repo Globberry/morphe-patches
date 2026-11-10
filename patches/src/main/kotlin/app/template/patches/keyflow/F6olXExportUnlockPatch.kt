@@ -4,7 +4,9 @@ import app.morphe.patcher.patch.classDefForEach
 import app.morphe.patcher.patch.mutableClassDefBy
 import app.morphe.patcher.patch.patch
 import app.template.patches.shared.Constants.COMPATIBILITY
+import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.instruction.BranchInstruction
+import com.android.tools.smali.dexlib2.Label
 
 /**
  * Keyflow 1.5.10 — f6olX Premium Export Unlock.
@@ -17,7 +19,7 @@ import com.android.tools.smali.dexlib2.instruction.BranchInstruction
  *     goto :goto_W                         ; failure path (returns not-premium sentinel)
  *
  * Morphe's existing "Pro Unlock" patch makes f6olX methods return early, but the export flow
- * still reaches one of the three `goto :goto_W` sites that a 3-site manual patch misses.
+ * still reaches one of the `goto :goto_W` failure sites that a 3-site manual patch misses.
  * Replacing every failure `goto :goto_W` with a jump to the premium `:cond_Z` label makes
  * every code path report Premium — including export.
  */
@@ -39,10 +41,10 @@ val f6olXExportUnlockPatch = patch(
                 val instrs = impl.instructions
                 for (i in instrs.indices) {
                     val instr = instrs[i]
-                    if (instr !is BranchInstruction || instr.opcode.mnemonic != "if-ne") continue
+                    if (instr !is BranchInstruction || instr.opcode != Opcode.IF_NE) continue
                     if (i + 1 >= instrs.size) continue
                     val next = instrs[i + 1]
-                    if (next !is BranchInstruction || next.opcode.mnemonic != "goto") continue
+                    if (next !is BranchInstruction || next.opcode != Opcode.GOTO) continue
 
                     val ifNeTargets = instr.branchTargets ?: continue
                     val gotoTargets = next.branchTargets ?: continue
@@ -53,7 +55,7 @@ val f6olXExportUnlockPatch = patch(
                     // Only bypass when if-ne jumps to the premium :cond_Z label but goto jumps
                     // elsewhere (the failure :goto_W path). Skip if they already agree.
                     if (condLabel != gotoLabel) {
-                        next.branchTargets = arrayOf(condLabel)
+                        next.branchTargets = arrayOf<Label>(condLabel)
                         patched++
                     }
                 }
