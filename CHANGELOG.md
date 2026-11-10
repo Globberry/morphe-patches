@@ -1,3 +1,9 @@
+## [1.2.7](https://github.com/Globberry/morphe-patches/compare/v1.2.6...v1.2.7) (2026-11-10)
+
+### 🐛 Bug Fixes
+
+* set yMQp6hm field=false so yMQp6hm() doesn't return sentinel; fix NMGZ06() to return Boolean.TRUE instead of KZr7ww (passes check-cast) ([d3af6bd](https://github.com/Globberry/morphe-patches/commit/d3af6bdb1f06a3720b96176e59834b7f09083c14))
+
 ## [1.2.6](https://github.com/Globberry/morphe-patches/compare/v1.2.5...v1.2.6) (2026-11-10)
 
 ### 🐛 Bug Fixes

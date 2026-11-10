@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-10T00:24:24",
-  "description": "## [1.2.6](https://github.com/Globberry/morphe-patches/compare/v1.2.5...v1.2.6) (2026-11-10)\n\n### 🐛 Bug Fixes\n\n* f6olX.yMQp6hm() returns Boolean.TRUE directly instead of sentinel so export callers pass the if-ne Pro check ([0937791](https://github.com/Globberry/morphe-patches/commit/0937791fd9ac3f046e942fec1e7b1158c3512cb6))\n* f6olX.yMQp6hm() returns Boolean.TRUE directly instead of sentinel so export callers pass the if-ne Pro check ([f4ecc12](https://github.com/Globberry/morphe-patches/commit/f4ecc1294aec8cdb736263a437dfcc7cad6077b0))",
-  "download_url": "https://github.com/Globberry/morphe-patches/releases/download/v1.2.6/patches-1.2.6.mpp",
+  "created_at": "2026-11-10T00:56:08",
+  "description": "## [1.2.7](https://github.com/Globberry/morphe-patches/compare/v1.2.6...v1.2.7) (2026-11-10)\n\n### 🐛 Bug Fixes\n\n* set yMQp6hm field=false so yMQp6hm() doesn't return sentinel; fix NMGZ06() to return Boolean.TRUE instead of KZr7ww (passes check-cast) ([d3af6bd](https://github.com/Globberry/morphe-patches/commit/d3af6bdb1f06a3720b96176e59834b7f09083c14))",
+  "download_url": "https://github.com/Globberry/morphe-patches/releases/download/v1.2.7/patches-1.2.7.mpp",
   "signature_download_url": "",
-  "version": "1.2.6"
+  "version": "1.2.7"
 }
