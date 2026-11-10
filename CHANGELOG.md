@@ -1,3 +1,9 @@
+## [1.2.8](https://github.com/Globberry/morphe-patches/compare/v1.2.7...v1.2.8) (2026-11-10)
+
+### 🐛 Bug Fixes
+
+* exclude native/abstract yMQp6hm methods with wrong param count from catch-all patch ([c1fc6d1](https://github.com/Globberry/morphe-patches/commit/c1fc6d10d031c9f236ac174e115400c31502f985))
+
 ## [1.2.7](https://github.com/Globberry/morphe-patches/compare/v1.2.6...v1.2.7) (2026-11-10)
 
 ### 🐛 Bug Fixes
