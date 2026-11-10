@@ -89,7 +89,10 @@ val proPatch = patch(
                 // Patch ALL Object-returning methods in f6olX to return Boolean.TRUE at
                 // position 0, so they return before reaching the if-ne sentinel check
                 // (goto :goto_aX after if-ne v2, v4).
-                mutable.methods.forEach { m ->
+                // Use .toList() to snapshot the methods before iterating — addFreeRegisters
+                // clones/replaces methods in the live collection, which would otherwise
+                // throw ConcurrentModificationException during forEach.
+                mutable.methods.toList().forEach { m ->
                     if (m.returnType.toString() == "Ljava/lang/Object;") {
                         val (cloned, added) = m.addFreeRegisters(1)
                         cloned.addInstructions(added, """
