@@ -1,3 +1,10 @@
+## [1.2.6](https://github.com/Globberry/morphe-patches/compare/v1.2.5...v1.2.6) (2026-11-10)
+
+### 🐛 Bug Fixes
+
+* f6olX.yMQp6hm() returns Boolean.TRUE directly instead of sentinel so export callers pass the if-ne Pro check ([0937791](https://github.com/Globberry/morphe-patches/commit/0937791fd9ac3f046e942fec1e7b1158c3512cb6))
+* f6olX.yMQp6hm() returns Boolean.TRUE directly instead of sentinel so export callers pass the if-ne Pro check ([f4ecc12](https://github.com/Globberry/morphe-patches/commit/f4ecc1294aec8cdb736263a437dfcc7cad6077b0))
+
 ## [1.2.5](https://github.com/Globberry/morphe-patches/compare/v1.2.4...v1.2.5) (2026-11-09)
 
 ### 🐛 Bug Fixes

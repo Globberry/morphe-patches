@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-09T23:24:23",
-  "description": "## [1.2.5](https://github.com/Globberry/morphe-patches/compare/v1.2.4...v1.2.5) (2026-11-09)\n\n### 🐛 Bug Fixes\n\n* force return Boolean.TRUE in f6olX export-critical methods (GX9XN3ZIZ, MeOIJuj, c3oEd, cdo7kOuyS, eFUbX) to bypass eFUbX.yMQp6hm Pro check during premium export ([cd12c04](https://github.com/Globberry/morphe-patches/commit/cd12c04160dd380841c8409e97013e076dc235b2))",
-  "download_url": "https://github.com/Globberry/morphe-patches/releases/download/v1.2.5/patches-1.2.5.mpp",
+  "created_at": "2026-11-10T00:24:24",
+  "description": "## [1.2.6](https://github.com/Globberry/morphe-patches/compare/v1.2.5...v1.2.6) (2026-11-10)\n\n### 🐛 Bug Fixes\n\n* f6olX.yMQp6hm() returns Boolean.TRUE directly instead of sentinel so export callers pass the if-ne Pro check ([0937791](https://github.com/Globberry/morphe-patches/commit/0937791fd9ac3f046e942fec1e7b1158c3512cb6))\n* f6olX.yMQp6hm() returns Boolean.TRUE directly instead of sentinel so export callers pass the if-ne Pro check ([f4ecc12](https://github.com/Globberry/morphe-patches/commit/f4ecc1294aec8cdb736263a437dfcc7cad6077b0))",
+  "download_url": "https://github.com/Globberry/morphe-patches/releases/download/v1.2.6/patches-1.2.6.mpp",
   "signature_download_url": "",
-  "version": "1.2.5"
+  "version": "1.2.6"
 }
