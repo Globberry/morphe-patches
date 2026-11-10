@@ -1,3 +1,9 @@
+## [1.2.12](https://github.com/Globberry/morphe-patches/compare/v1.2.11...v1.2.12) (2026-11-10)
+
+### 🐛 Bug Fixes
+
+* remove non-functional f6olX patches (classes in classes4.dex); keep uHQuOrIu, mx6nK, kjXTc, uhgAYKl2b patches for Pro state unlock ([bddce74](https://github.com/Globberry/morphe-patches/commit/bddce74c11046f3b51d4c073903c14472262d421))
+
 ## [1.2.11](https://github.com/Globberry/morphe-patches/compare/v1.2.10...v1.2.11) (2026-11-10)
 
 ### 🐛 Bug Fixes
