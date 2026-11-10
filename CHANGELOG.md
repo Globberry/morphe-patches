@@ -1,3 +1,9 @@
+## [1.2.9](https://github.com/Globberry/morphe-patches/compare/v1.2.8...v1.2.9) (2026-11-10)
+
+### 🐛 Bug Fixes
+
+* remove catch-all yMQp6hm patch that crashed v5YtyUtD.MeOIJuj; keep f6olX patches only (yMQp6hm=Boolean.TRUE, NMGZ06=Boolean.TRUE, lSqPRgn=true, yMQp6hm field=false) ([e86b815](https://github.com/Globberry/morphe-patches/commit/e86b81511865a059080d6e42f11dea275e67bf0c))
+
 ## [1.2.8](https://github.com/Globberry/morphe-patches/compare/v1.2.7...v1.2.8) (2026-11-10)
 
 ### 🐛 Bug Fixes
