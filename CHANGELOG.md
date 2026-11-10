@@ -1,3 +1,9 @@
+## [1.3.0](https://github.com/Globberry/morphe-patches/compare/v1.2.15...v1.3.0) (2026-11-10)
+
+### ✨ New Features
+
+* add Keyflow 1.5.10 export Pro bypass patches ([b5ab232](https://github.com/Globberry/morphe-patches/commit/b5ab2325f3694943c3cf0e62a7156ac99f706f3b))
+
 ## [1.2.15](https://github.com/Globberry/morphe-patches/compare/v1.2.14...v1.2.15) (2026-11-10)
 
 ### 🐛 Bug Fixes
