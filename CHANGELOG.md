@@ -1,3 +1,9 @@
+## [1.2.15](https://github.com/Globberry/morphe-patches/compare/v1.2.14...v1.2.15) (2026-11-10)
+
+### 🐛 Bug Fixes
+
+* CME in ProPatch + add f6olX goto fix for Keyflow 1.5.10 export ([1ed085e](https://github.com/Globberry/morphe-patches/commit/1ed085e5d5ead279c63c8fd253c6219bcecdd7ec))
+
 ## [1.2.14](https://github.com/Globberry/morphe-patches/compare/v1.2.13...v1.2.14) (2026-11-10)
 
 ### 🐛 Bug Fixes
