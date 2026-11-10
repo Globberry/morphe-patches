@@ -1,3 +1,9 @@
+## [1.2.11](https://github.com/Globberry/morphe-patches/compare/v1.2.10...v1.2.11) (2026-11-10)
+
+### 🐛 Bug Fixes
+
+* set LwQ0TDjP.BEDum=Boolean.FALSE in clinit to break sentinel check; remove broken instruction modification code ([74e58a2](https://github.com/Globberry/morphe-patches/commit/74e58a296c006025c3e6b0678b46f0d203cf82e6))
+
 ## [1.2.10](https://github.com/Globberry/morphe-patches/compare/v1.2.9...v1.2.10) (2026-11-10)
 
 ### 🐛 Bug Fixes
