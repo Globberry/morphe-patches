@@ -24,8 +24,6 @@ Click the button below, or manually add this repo url to Morphe Manager: https:/
 <summary>📦 Keyflow&nbsp;&nbsp;•&nbsp;&nbsp;6 patches</summary>
 <br>
 
-**Package name:** `com.angkin.keyflow`
-
 **🎯 Supported versions:**
 
 | 1.5.10 |
