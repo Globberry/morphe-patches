@@ -97,13 +97,19 @@ val proPatch = patch(
             if (classDef.type != "Lf6olX;") {
                 val hasYmqp6hmObj = classDef.methods.any { m ->
                     m.name == "yMQp6hm" &&
+                        m.parameters.size == 1 &&
+                        m.parameters[0].type == "LDfY1jDk68;" &&
                         m.returnType == "Ljava/lang/Object;" &&
-                        (m.accessFlags and AccessFlags.STATIC.value) == 0
+                        (m.accessFlags and AccessFlags.STATIC.value) == 0 &&
+                        (m.accessFlags and AccessFlags.NATIVE.value) == 0 &&
+                        (m.accessFlags and AccessFlags.ABSTRACT.value) == 0
                 }
                 if (hasYmqp6hmObj) {
                     val mutable = mutableClassDefBy(classDef)
                     mutable.methods.first { m ->
                         m.name == "yMQp6hm" &&
+                            m.parameters.size == 1 &&
+                            m.parameters[0].type == "LDfY1jDk68;" &&
                             m.returnType == "Ljava/lang/Object;" &&
                             (m.accessFlags and AccessFlags.STATIC.value) == 0
                     }.let { method ->
