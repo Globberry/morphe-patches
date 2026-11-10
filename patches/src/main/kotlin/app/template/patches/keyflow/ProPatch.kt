@@ -28,7 +28,7 @@ val proPatch = patch(
             if (classDef.type == "Lf6olX;") {
                 val mutable = mutableClassDefBy(classDef)
 
-                // <clinit>()V -> yMQp6hm=false (so yMQp6hm() doesn't return sentinel/block), lSqPRgn=false
+                // <clinit>()V -> yMQp6hm=false, lSqPRgn=false
                 val (clinitCloned, clinitAdded) = mutable.methods.first { m ->
                     m.name == "<clinit>" && m.parameters.isEmpty() && m.returnType == "V" && (m.accessFlags and AccessFlags.STATIC.value) != 0
                 }.addFreeRegisters(2)
@@ -84,6 +84,25 @@ val proPatch = patch(
                         m.returnType == "Z" &&
                         (m.accessFlags and AccessFlags.STATIC.value) != 0
                 }.returnEarly(true)
+            }
+        }
+
+        // Patch LwQ0TDjP.<clinit> to set BEDum sentinel = Boolean.FALSE
+        // This breaks the sentinel check in f6olX export methods where
+        // v4 = BEDum and v2 = yMQp6hm() result. If yMQp6hm() returns
+        // something different from BEDum, if-ne passes and export proceeds.
+        classDefForEach { classDef: ClassDef ->
+            if (classDef.type == "LwQ0TDjP;") {
+                val mutable = mutableClassDefBy(classDef)
+                val (clinitCloned, clinitAdded) = mutable.methods.first { m ->
+                    m.name == "<clinit>" && m.parameters.isEmpty() && m.returnType == "V" && (m.accessFlags and AccessFlags.STATIC.value) != 0
+                }.addFreeRegisters(2)
+                clinitCloned.addInstructions(clinitAdded, """
+                    const/4 v0, 0x0
+                    invoke-static {v0}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
+                    move-result-object v0
+                    sput-object v0, LwQ0TDjP;->BEDum:LwQ0TDjP;
+                """)
             }
         }
 
