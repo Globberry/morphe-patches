@@ -1,3 +1,9 @@
+## [1.3.9](https://github.com/Globberry/morphe-patches/compare/v1.3.8...v1.3.9) (2026-11-11)
+
+### 🐛 Bug Fixes
+
+* remove CtCUGg.cdo7kOuyS patch - fixes startup VerifyError and import regression ([f2573b1](https://github.com/Globberry/morphe-patches/commit/f2573b11c65618c1684c9df1e093374af4a9469f))
+
 ## [1.3.8](https://github.com/Globberry/morphe-patches/compare/v1.3.7...v1.3.8) (2026-11-11)
 
 ### 🐛 Bug Fixes
