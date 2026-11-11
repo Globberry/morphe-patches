@@ -19,9 +19,9 @@ Click the button below, or manually add this repo url to Morphe Manager: https:/
 ## 🩹 Patches list
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.7.2](https://github.com/Globberry/morphe-patches/releases/tag/v1.7.2)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;21 patches total
+> **[v1.7.3](https://github.com/Globberry/morphe-patches/releases/tag/v1.7.3)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;6 patches total
 <details open>
-<summary>📦 Keyflow&nbsp;&nbsp;•&nbsp;&nbsp;21 patches</summary>
+<summary>📦 Keyflow&nbsp;&nbsp;•&nbsp;&nbsp;6 patches</summary>
 <br>
 
 **Package name:** `com.angkin.keyflow`
@@ -33,25 +33,10 @@ Click the button below, or manually add this repo url to Morphe Manager: https:/
 
 | 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
 |----------|----------------|-----------|
-| [Keyflow Export Pro Gate Bypass](#keyflow-export-pro-gate-bypass) | Allows exporting projects that use Pro features by bypassing the Pro purchase checks in the export pipeline. |  |
-| [Keyflow Trusted Signer Bypass](#keyflow-trusted-signer-bypass) | Always report the app signature as trusted so Pro is not reset when opening a project or exporting. |  |
-| [Keyflow byYKY0yXO Signer Bypass](#keyflow-byyky0yxo-signer-bypass) | Return a dummy signer identity string during export so the export path does not fail on re-signed APKs. |  |
-| [Keyflow f6olX Goto Fix](#keyflow-f6olx-goto-fix) | Replaces failure goto sites in f6olX with nop so all code paths reach Premium (Keyflow 1.5.10 export). |  |
 | [PairIP License Check](#pairip-license-check) | Neuters PairIP license verification so the app runs without a valid license. |  |
-| [Pro Unlock](#pro-unlock) | Forces all Pro features enabled and replaces the Google Play confirmation with a fake success, so ad surfaces never appear. |  |
-| [Signer Identity](#signer-identity) | Forces the app's signer identity to match the original publisher certificate. |  |
-| [[ALL] PairIP License Check](#all-pairip-license-check) | Neuters PairIP license verification using fingerprint matching (version-robust). |  |
-| [[ALL] Pro Unlock](#all-pro-unlock) | Forces all Pro features enabled using fingerprint matching (version-robust for method name changes). |  |
-| [[ALL] Signer Identity](#all-signer-identity) | Forces the app's signer identity to match the original publisher certificate (fingerprint-based, version-robust). |  |
-| [[Export] 1 kts6dAU4 Gate](#export-1-kts6dau4-gate) | Always allow Pro features in the export Pro gate (Lkts6dAU4.NMGZ06). |  |
-| [[Export] 10 WHoiaEDD Force Export](#export-10-whoiaedd-force-export) | Always create the export coroutine in WHoiaEDD (skips the export-trigger check). |  |
+| [Pro Unlock](#pro-unlock) | Forces all Pro features enabled, keeps Pro active after signer checks, and unlocks Pro exports (including the paid-export receipt check). |  |
+| [Signer Identity](#signer-identity) | Forces the app's signer identity, signature checks, and signer-identity string to match the original publisher certificate. |  |
 | [[Export] 12 Purchase Allow](#export-12-purchase-allow) | Always accept the paid-export purchase check (LP0JcGi9.MeOIJuj). |  |
-| [[Export] 2 kts6dAU4 Throw](#export-2-kts6dau4-throw) | Do not throw the Pro-required exception (LwNKvkk7) during export. |  |
-| [[Export] 3 y88yfJ73C Allow](#export-3-y88yfj73c-allow) | Always let the export pass the LCtCUGg.y88yfJ73C abort check. |  |
-| [[Export] 4 ZFJe6vx50 Skip](#export-4-zfje6vx50-skip) | Never take the export-abort branch in LZFJe6vx50.invoke. |  |
-| [[Export] 5 kCg72Z4t State](#export-5-kcg72z4t-state) | Publish PLAYING instead of PRO_REQUIRED/ERROR as export state. |  |
-| [[Export] 6 CtCUGg Pro Features](#export-6-ctcugg-pro-features) | Pretend the project uses no Pro features (LCtCUGg.KPCmEBxs). |  |
-| [[Export] 7 LsvcJNUbK3 Allow](#export-7-lsvcjnubk3-allow) | Always allow the LsvcJNUbK3 sub-check of the export Pro gate. |  |
 | [[Export] 8 Diagnostics](#export-8-diagnostics) | Log the whole export flow to logcat (tag KFPro). Read with: adb logcat -s KFPro |  |
 | [[Export] 9 Toast](#export-9-toast) | Show a toast naming the reason the export was cancelled. |  |
 

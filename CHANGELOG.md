@@ -1,3 +1,9 @@
+## [1.7.3](https://github.com/Globberry/morphe-patches/compare/v1.7.2...v1.7.3) (2026-11-11)
+
+### 🐛 Bug Fixes
+
+* consolidate patches by aim ([1a1d12b](https://github.com/Globberry/morphe-patches/commit/1a1d12b0f01bfecf98fa5a458aea376817c3284f))
+
 ## [1.7.2](https://github.com/Globberry/morphe-patches/compare/v1.7.1...v1.7.2) (2026-11-11)
 
 ### 🐛 Bug Fixes
