@@ -20,15 +20,16 @@ import com.android.tools.smali.dexlib2.iface.ClassDef
  *  3. LCtCUGg.y88yfJ73C -> always allow  (the second gate)
  *  4. LZFJe6vx50.invoke -> never take the export-cancel branch
  *  5. LkCg72Z4t         -> publish PLAYING instead of PRO_REQUIRED / ERROR
+ *  6. LP0JcGi9.MeOIJuj  -> accept the paid-export receipt check
  *
- * Disabled by default so the individual [Export] patches can be tested in
- * isolation.
+ * Enabled by default; every step is also available as an individual [Export]
+ * patch for troubleshooting.
  */
 @Suppress("unused")
 val exportProGateBypassPatch = patch(
     name = "Keyflow Export Pro Gate Bypass",
-    description = "Allows exporting projects that use Pro features by bypassing the Pro gate in the export pipeline.",
-    default = false
+    description = "Allows exporting projects that use Pro features by bypassing the Pro purchase checks in the export pipeline.",
+    default = true
 ) {
     compatibleWith(COMPATIBILITY)
 
@@ -147,6 +148,31 @@ val exportProGateBypassPatch = patch(
                         i,
                         "sget-object v$reg, La82eAByx;->kwEINn3:La82eAByx;"
                     )
+                    patched++
+                }
+            }
+        }
+
+        // 6. Accept the paid-export purchase check (Export screen path)
+        classDefForEach { classDef: ClassDef ->
+            if (classDef.type != "LP0JcGi9;") return@classDefForEach
+            val mutable = mutableClassDefBy(classDef)
+            for (method in mutable.methods.toList()) {
+                if (method.name != "MeOIJuj") continue
+                if (method.parameters.size != 2) continue
+                if (method.parameters[0].type != "Landroid/content/Context;") continue
+                if (method.returnType != "Ljava/lang/Object;") continue
+                val impl = method.implementation ?: continue
+                val instrs = impl.instructions
+                // There is exactly one "new-instance LilvEt;" in the app; the
+                // branch right before it is the receipt-verification result.
+                for (i in instrs.indices) {
+                    if (instrs[i].opcode != Opcode.NEW_INSTANCE) continue
+                    if (refOf(instrs[i]) != "LilvEt;") continue
+                    val branch = i - 1
+                    if (branch < 0) continue
+                    if (instrs[branch].opcode != Opcode.IF_EQZ) continue
+                    method.replaceInstruction(branch, "nop")
                     patched++
                 }
             }
