@@ -1,3 +1,9 @@
+## [1.3.8](https://github.com/Globberry/morphe-patches/compare/v1.3.7...v1.3.8) (2026-11-11)
+
+### 🐛 Bug Fixes
+
+* CtCUGg.cdo7kOuyS() - replace instr 0 with const/4 v0,0x0 and instr 1 with return v0 ([2bd4d5e](https://github.com/Globberry/morphe-patches/commit/2bd4d5e3efb90254c55443ca7517d9789d4ed64d))
+
 ## [1.3.7](https://github.com/Globberry/morphe-patches/compare/v1.3.6...v1.3.7) (2026-11-11)
 
 ### 🐛 Bug Fixes
