@@ -788,7 +788,68 @@ val exportExp9ToastPatch = patch(
 }
 
 // ---------------------------------------------------------------------------
-// [Export] 10 - WHoiaEDD.Ei8C6JWM is the Compose launcher of the export
+// [Export] 11 - Ldm1.oJpK3JT6v is what actually starts the export.  It asks
+//                the context whether the export may run:
+//
+//     invoke-interface {p0, v2, v1}, LdUFfAWSX;->Ei8C6JWM(LVOhjBYkE;Ljava/lang/Object;)Ljava/lang/Object;
+//     move-result-object v1
+//     check-cast v1, Ljava/lang/Boolean;
+//     invoke-virtual {v1}, Ljava/lang/Boolean;->booleanValue()Z
+//     move-result v1
+//     const/4 v2, 0x0
+//     if-nez v1, :cond_0        <- TRUE  -> build the export coroutine
+//     ... Kevrq(...)             <- FALSE -> sentinel, export silently skipped
+//
+//                Replacing the check with Boolean.TRUE makes the launcher
+//                always take the "build the export coroutine" path.
+//                The replacement keeps an invoke right before the
+//                move-result-object, which the dex format requires.
+// ---------------------------------------------------------------------------
+@Suppress("unused")
+val exportExp11AllowExportPatch = patch(
+    name = "[Export] 11 Ldm1 Allow Export",
+    description = "Always let the export start (Ldm1.oJpK3JT6v: the context's export check returns TRUE).",
+    default = false
+) {
+    compatibleWith(COMPATIBILITY)
+    execute {
+        var patched = 0
+        classDefForEach { classDef: ClassDef ->
+            if (classDef.type != "Ldm1;") return@classDefForEach
+            val mutable = mutableClassDefBy(classDef)
+            for (method in mutable.methods.toList()) {
+                if (method.name != "oJpK3JT6v") continue
+                if (method.parameters.size != 3) continue
+                if (method.parameters[0].type != "LdUFfAWSX;") continue
+                if (method.returnType != "Ljava/lang/Object;") continue
+                val impl = method.implementation ?: continue
+                val instrs = impl.instructions
+                val targets = mutableListOf<Int>()
+                for (i in instrs.indices) {
+                    if (instrs[i].opcode != Opcode.INVOKE_INTERFACE) continue
+                    val ref = refOf(instrs[i]) ?: continue
+                    if (!ref.contains("LdUFfAWSX;->Ei8C6JWM")) continue
+                    targets.add(i)
+                }
+                for (i in targets.reversed()) {
+                    if (!safeReplaceInstructions(
+                            method,
+                            i,
+                            """
+                            const/4 v3, 0x1
+                            invoke-static {v3}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
+                            """.trimIndent()
+                        )
+                    ) continue
+                    patched++
+                }
+            }
+        }
+        if (patched == 0) {
+            reportSkip("11 Ldm1 Allow Export", "export-start check not found in Ldm1.oJpK3JT6v")
+        }
+    }
+}
 //               coroutine.  It looks like this:
 //
 //                   invoke-virtual {v3}, LCtCUGg;->bPrNb6O()Ljava/lang/Object;
