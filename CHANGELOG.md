@@ -1,3 +1,9 @@
+## [1.3.6](https://github.com/Globberry/morphe-patches/compare/v1.3.5...v1.3.6) (2026-11-11)
+
+### 🐛 Bug Fixes
+
+* remove CtCUGg.cdo7kOuyS patch that caused VerifyError on startup ([56423e5](https://github.com/Globberry/morphe-patches/commit/56423e532fb7eb4def5f760a1d44a68ae933a20e))
+
 ## [1.3.5](https://github.com/Globberry/morphe-patches/compare/v1.3.4...v1.3.5) (2026-11-11)
 
 ### 🐛 Bug Fixes
