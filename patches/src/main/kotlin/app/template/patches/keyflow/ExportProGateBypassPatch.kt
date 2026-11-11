@@ -28,8 +28,9 @@ import com.android.tools.smali.dexlib2.Opcode
  *    of p0 into v4 with const/4 v4, 0x0 (null), so the error string is null and
  *    cdo7kOuyS(null) doesn't trigger an error state, letting the export proceed.
  *
- * 4. CtCUGg.cdo7kOuyS(): Always returns false so Pro-gate checks based on this
- *    method pass, allowing the export to continue past Pro feature detection.
+ * 4. CtCUGg.cdo7kOuyS(): Always return false so Pro-gate checks pass.
+ *    Replace instruction 0 with "const/4 v0, 0x0" and instruction 1 with
+ *    "return v0". All subsequent instructions are unreachable after return v0.
  */
 @Suppress("unused")
 val exportProGateBypassPatch = patch(
@@ -133,6 +134,9 @@ val exportProGateBypassPatch = patch(
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // 4. CtCUGg.cdo7kOuyS() — always return false so Pro-gate checks pass
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // Replace instruction 0 (invoke-virtual OoXhupy0n) with "const/4 v0, 0x0"
+        // and instruction 1 (move-result-object v0) with "return v0".
+        // All subsequent instructions become unreachable after return v0.
         classDefForEach { classDef: ClassDef ->
             if (classDef.type != "LCtCUGg;") return@classDefForEach
 
@@ -147,13 +151,9 @@ val exportProGateBypassPatch = patch(
                 val impl = method.implementation ?: return@let
                 val instrs = impl.instructions
 
-                // Replace first instruction with const/4 v0, 0x0; return v0
-                // Replace all remaining instructions with nop
-                if (instrs.isNotEmpty()) {
-                    method.replaceInstruction(0, "const/4 v0, 0x0\nreturn v0")
-                    for (i in 1 until instrs.size) {
-                        method.replaceInstruction(i, "nop")
-                    }
+                if (instrs.size >= 2) {
+                    method.replaceInstruction(0, "const/4 v0, 0x0")
+                    method.replaceInstruction(1, "return v0")
                 }
             }
         }
