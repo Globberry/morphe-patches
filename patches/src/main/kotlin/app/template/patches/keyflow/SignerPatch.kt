@@ -19,7 +19,7 @@ private const val CERT_BASE64 =
 @Suppress("unused")
 val signerPatch = patch(
     name = "Signer Identity",
-    description = "Forces the app's signer identity to match the original publisher certificate.",
+    description = "Forces the app's signer identity, signature checks, and signer-identity string to match the original publisher certificate.",
     default = true
 ) {
     compatibleWith(COMPATIBILITY)
@@ -89,6 +89,46 @@ val signerPatch = patch(
 
                 val chunks = CERT_BASE64.chunked(100)
                 cloned.addInstructions(added, buildCertListSmali(chunks))
+            }
+        }
+
+        // --- LUuxmVJjT.yMQp6hm(String, Set) -> always report "trusted" ---
+        // mMDNzWiQL checks whether the app's certificate is trusted through
+        // this method. When it returns false the app treats itself as modified
+        // and resets/disables Pro.
+        classDefForEach { classDef: ClassDef ->
+            if (classDef.type != "LuuxmVJjT;") return@classDefForEach
+            val mutable = mutableClassDefBy(classDef)
+            mutable.methods.first { m ->
+                m.name == "yMQp6hm" &&
+                    m.parameters.size == 2 &&
+                    m.parameters[0].type == "Ljava/lang/String;" &&
+                    m.parameters[1].type == "Ljava/util/Set;" &&
+                    m.returnType == "Z" &&
+                    (m.accessFlags and AccessFlags.STATIC.value) != 0
+            }.returnEarly(true)
+        }
+
+        // --- byYKY0yXO.NMGZ06(Context, LyDPQAXIU) -> dummy non-null string ---
+        // Called during export to verify the signer identity. Returning null
+        // (e.g. after the APK was re-signed) makes the export path fail.
+        classDefForEach { classDef: ClassDef ->
+            if (classDef.type != "LbyYKY0yXO;") return@classDefForEach
+            val mutable = mutableClassDefBy(classDef)
+            mutable.methods.first { m ->
+                m.name == "NMGZ06" &&
+                    m.parameters.size == 2 &&
+                    m.parameters[0].type == "Landroid/content/Context;" &&
+                    m.parameters[1].type.startsWith("L") &&
+                    m.parameters[1].type.endsWith(";") &&
+                    m.returnType == "Ljava/lang/String;" &&
+                    (m.accessFlags and AccessFlags.STATIC.value) != 0
+            }.let { method ->
+                val (cloned, added) = method.addFreeRegisters(1)
+                cloned.addInstructions(added, """
+                    const-string v0, "dummy"
+                    return-object v0
+                """)
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿package app.template.patches.keyflow
+package app.template.patches.keyflow
 
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.removeInstruction
@@ -178,339 +178,19 @@ internal fun reportSkip(patchName: String, detail: String) {
 }
 
 // ---------------------------------------------------------------------------
-// Keyflow 1.5.10 - Export Pro Gate: EXPERIMENTAL PATCH SUITE.
+// Keyflow 1.5.10 - optional export diagnostics and manual fallbacks.
 //
-// Every patch here is independent and individually toggleable so that
-// different combinations can be tested. All of them are disabled by default.
+// The actual Pro unlock and all default export bypasses live in ProPatch
+// ("Pro Unlock") and SignerPatch ("Signer Identity"). The patches left here
+// are disabled by default and kept separate for troubleshooting:
 //
-// How the Pro gate actually works in 1.5.10
-// -----------------------------------------
-//
-//  export coroutine (LkCg72Z4t.invokeSuspend)
-//    +-- LP0JcGi9.cdo7kOuyS(...)             <- performs the real export
-//         +-- Lkts6dAU4.GX9XN3ZIZ / c3oEd   <- collects the Pro features used
-//              +-- Lkts6dAU4.NMGZ06(LXfNXj)Z  <- THE MAIN GATE
-//                   +-- this.GX9XN3IZ callback (the stored Pro receipt)
-//                   +-- LsvcJNUbK3.NMGZ06(this.c3oEd)
-//                   +-- LuHQuORIu.eFUbX       (the "pro_active" flag)
-//              +-- if the gate says "no" -> throw LwNKvkk7 (Pro required)
-//
-//  LwNKvkk7 is caught inside P0JcGi9.cdo7kOuyS and converted into a
-//  Ly5XhdY0 ("Pro result") object, which LkCg72Z4t then turns into the
-//  La82eAByx.RdpTsF (PRO_REQUIRED) export state -> the dialog closes silently.
-//
-//  LCtCUGg.y88yfJ73C is a second, independent gate; when it returns false
-//  LZFJe6vx50.invoke bails out of the export UI.
-//
-// The patches
-// -----------
-//
-//  [Export] 1  kts6dAU4 Gate    * primary * the real Pro gate -> always allow
-//  [Export] 2  kts6dAU4 Throw   * primary * don't throw the Pro exception
-//  [Export] 3  y88yfJ73C Allow  the second gate -> always allow
-//  [Export] 4  ZFJe6vx50 Skip   don't take the export-abort branch
-//  [Export] 5  kCg72Z4t State   PRO_REQUIRED / ERROR -> PLAYING
-//  [Export] 6  LCWcMAXf Error   replace the pre-export error message by ""
-//  [Export] 7  LsvcJNUbK3 Allow sub-check of gate 1 -> always allow
 //  [Export] 8  Diagnostics      full logcat trace of the export (tag KFPro)
 //  [Export] 9  Toast            on-screen toast naming the blocker
-//  [Export] 10 WHoiaEDD Force   always create the editor-overlay export coroutine
-//  [Export] 12 Purchase Allow   the paid-export receipt check -> always allowed
-// ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
-// [Export] 1 - Lkts6dAU4.NMGZ06: the real "is this Pro feature allowed?" gate.
-//              Forcing it to true stops the Pro-required exception from ever
-//              being thrown, so the export simply runs to completion.
-// ---------------------------------------------------------------------------
-@Suppress("unused")
-val exportExp1Kts6dAU4GatePatch = patch(
-    name = "[Export] 1 kts6dAU4 Gate",
-    description = "Always allow Pro features in the export Pro gate (Lkts6dAU4.NMGZ06).",
-    default = false
-) {
-    compatibleWith(COMPATIBILITY)
-    execute {
-        var patched = 0
-        classDefForEach { classDef: ClassDef ->
-            if (classDef.type != "Lkts6dAU4;") return@classDefForEach
-            val mutable = mutableClassDefBy(classDef)
-            for (method in mutable.methods.toList()) {
-                if (method.name != "NMGZ06") continue
-                if (method.parameters.size != 1) continue
-                if (method.parameters[0].type != "LXfNXj;") continue
-                if (method.returnType != "Z") continue
-                method.returnEarly(true)
-                patched++
-            }
-        }
-        if (patched == 0) {
-            reportSkip("1 kts6dAU4 Gate", "Lkts6dAU4.NMGZ06(LXfNXj)Z not found")
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------
-// [Export] 2 - Lkts6dAU4: never throw the "Pro required" exception.
-//              This is the literal "reroute premium export -> normal export":
-//              the Pro features are simply ignored and the export continues.
-// ---------------------------------------------------------------------------
-@Suppress("unused")
-val exportExp2Kts6dAU4ThrowPatch = patch(
-    name = "[Export] 2 kts6dAU4 Throw",
-    description = "Do not throw the Pro-required exception (LwNKvkk7) during export.",
-    default = false
-) {
-    compatibleWith(COMPATIBILITY)
-    execute {
-        var patched = 0
-        classDefForEach { classDef: ClassDef ->
-            if (classDef.type != "Lkts6dAU4;") return@classDefForEach
-            val mutable = mutableClassDefBy(classDef)
-            for (method in mutable.methods.toList()) {
-                if (!method.name.startsWith("GX9XN3") && method.name != "c3oEd") continue
-                val impl = method.implementation ?: continue
-                val instrs = impl.instructions
-                val throwIndices = instrs.indices.filter { instrs[it].opcode == Opcode.THROW }
-                for (i in throwIndices.reversed()) {
-                    method.replaceInstruction(i, "return-void")
-                    patched++
-                }
-            }
-        }
-        if (patched == 0) {
-            reportSkip("2 kts6dAU4 Throw", "no throw instruction found in Lkts6dAU4")
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------
-// [Export] 3 - LCtCUGg.y88yfJ73C: the second gate. It returns FALSE when the
-//              export must be aborted. Force it to always return TRUE.
+//  [Export] 12 Purchase Allow   standalone paid-export receipt bypass
 //
-//              The method has two exits:
-//                  const/4 v1, 0   /  return v1     <- FALSE  (blocked)
-//                  return v0                         <- TRUE
-//
-//              We insert "const/4 v1, 1" right before the `return` of the
-//              FALSE exit, so the exit returns 1 instead of 0. The
-//              `const/4 v1, 0` marker stays intact (the Diagnostics patch
-//              anchors on it).
+// [Export] 12 is redundant when "Pro Unlock" is enabled (it already applies
+// the same MeOIJuj fix); it then reports itself as already applied.
 // ---------------------------------------------------------------------------
-@Suppress("unused")
-val exportExp3Y88yfJ73CPatch = patch(
-    name = "[Export] 3 y88yfJ73C Allow",
-    description = "Always let the export pass the LCtCUGg.y88yfJ73C abort check.",
-    default = false
-) {
-    compatibleWith(COMPATIBILITY)
-    execute {
-        var patched = 0
-        classDefForEach { classDef: ClassDef ->
-            if (classDef.type != "LCtCUGg;") return@classDefForEach
-            val mutable = mutableClassDefBy(classDef)
-            for (method in mutable.methods.toList()) {
-                if (method.name != "y88yfJ73C") continue
-                if (method.parameters.size != 2) continue
-                if (method.parameters[0].type != "I" || method.parameters[1].type != "Z") continue
-                if (method.returnType != "Z") continue
-                val impl = method.implementation ?: continue
-                val instrs = impl.instructions
-                for (i in instrs.indices) {
-                    if (const4Literal(instrs[i]) != 0) continue
-                    val reg = destRegister(instrs[i]) ?: continue
-                    // The matching "return" may be a couple of instructions
-                    // away (the Diagnostics patch inserts a log in between).
-                    var retIdx = -1
-                    for (j in i + 1..minOf(i + 4, instrs.size - 1)) {
-                        if (instrs[j].opcode == Opcode.RETURN) {
-                            retIdx = j
-                            break
-                        }
-                    }
-                    if (retIdx < 0) continue
-                    if (!safeInsertInstructions(
-                            method,
-                            retIdx,
-                            """
-                            const/4 v$reg, 0x1
-                            """.trimIndent()
-                        )
-                    ) continue
-                    patched++
-                }
-            }
-        }
-        if (patched == 0) {
-            reportSkip("3 y88yfJ73C Allow", "FALSE exit of LCtCUGg.y88yfJ73C not found")
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------
-// [Export] 4 - LZFJe6vx50.invoke: the branch that bails out of the export when
-//              y88yfJ73C() returns false.
-//
-//                invoke-virtual {v1, v5, v2}, LCtCUGg;->y88yfJ73C(IZ)Z
-//                move-result v2
-//                if-eqz v2, :cond_8      <- this one
-//
-//              We anchor on the invoke (not on the label name, which is not
-//              stable) and replace the branch two instructions later with nop.
-// ---------------------------------------------------------------------------
-@Suppress("unused")
-val exportExp4ZFJe6vx50Patch = patch(
-    name = "[Export] 4 ZFJe6vx50 Skip",
-    description = "Never take the export-abort branch in LZFJe6vx50.invoke.",
-    default = false
-) {
-    compatibleWith(COMPATIBILITY)
-    execute {
-        var patched = 0
-        classDefForEach { classDef: ClassDef ->
-            if (classDef.type != "LZFJe6vx50;") return@classDefForEach
-            val mutable = mutableClassDefBy(classDef)
-            for (method in mutable.methods.toList()) {
-                if (method.name != "invoke") continue
-                if (method.parameters.size != 2) continue
-                if (method.returnType != "Ljava/lang/Object;") continue
-                val impl = method.implementation ?: continue
-                val instrs = impl.instructions
-                val targets = mutableListOf<Int>()
-                for (i in instrs.indices) {
-                    if (instrs[i].opcode != Opcode.INVOKE_VIRTUAL) continue
-                    val ref = refOf(instrs[i]) ?: continue
-                    if (!ref.contains("y88yfJ73C")) continue
-                    if (i + 2 >= instrs.size) continue
-                    if (instrs[i + 1].opcode != Opcode.MOVE_RESULT) continue
-                    if (instrs[i + 2].opcode != Opcode.IF_EQZ) continue
-                    targets.add(i + 2)
-                }
-                for (i in targets.reversed()) {
-                    method.replaceInstruction(i, "nop")
-                    patched++
-                }
-            }
-        }
-        if (patched == 0) {
-            reportSkip("4 ZFJe6vx50 Skip", "abort branch after y88yfJ73C not found")
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------
-// [Export] 5 - LkCg72Z4t.invokeSuspend: never publish the PRO_REQUIRED (or
-//              ERROR) export state. The UI state machine has no
-//              PRO_REQUIRED -> ok transition, so the export dialog just closes.
-// ---------------------------------------------------------------------------
-@Suppress("unused")
-val exportExp5KCg72Z4tStatePatch = patch(
-    name = "[Export] 5 kCg72Z4t State",
-    description = "Publish PLAYING instead of PRO_REQUIRED/ERROR as export state.",
-    default = false
-) {
-    compatibleWith(COMPATIBILITY)
-    execute {
-        var patched = 0
-        classDefForEach { classDef: ClassDef ->
-            if (classDef.type != "LkCg72Z4t;") return@classDefForEach
-            val mutable = mutableClassDefBy(classDef)
-            for (method in mutable.methods.toList()) {
-                if (method.name != "invokeSuspend") continue
-                if (method.parameters.size != 1) continue
-                if (method.returnType != "Ljava/lang/Object;") continue
-                val impl = method.implementation ?: continue
-                val instrs = impl.instructions
-                val targets = mutableListOf<Int>()
-                for (i in instrs.indices) {
-                    if (instrs[i].opcode != Opcode.SGET_OBJECT) continue
-                    val ref = refOf(instrs[i]) ?: continue
-                    if (!ref.contains("La82eAByx;->RdpTsF:") &&
-                        !ref.contains("La82eAByx;->Jp4lVJ:")
-                    ) continue
-                    targets.add(i)
-                }
-                for (i in targets.reversed()) {
-                    val reg = destRegister(instrs[i]) ?: continue
-                    method.replaceInstruction(
-                        i,
-                        "sget-object v$reg, La82eAByx;->kwEINn3:La82eAByx;"
-                    )
-                    patched++
-                }
-            }
-        }
-        if (patched == 0) {
-            reportSkip("5 kCg72Z4t State", "PRO_REQUIRED/ERROR state assignment not found")
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------
-// [Export] 6 - LCtCUGg.KPCmEBxs: "does the project use Pro features?".
-//              Forcing it to false makes the second gate (y88yfJ73C) allow the
-//              export and stops the Pro features from being reported.
-//
-//              NOTE: this used to blank out the message that
-//              LCWcMAXf.c3oEd puts into the UI state, which wiped every
-//              button label of the app.  That is why it is gone.
-// ---------------------------------------------------------------------------
-@Suppress("unused")
-val exportExp6CtCUGgProPatch = patch(
-    name = "[Export] 6 CtCUGg Pro Features",
-    description = "Pretend the project uses no Pro features (LCtCUGg.KPCmEBxs).",
-    default = false
-) {
-    compatibleWith(COMPATIBILITY)
-    execute {
-        var patched = 0
-        classDefForEach { classDef: ClassDef ->
-            if (classDef.type != "LCtCUGg;") return@classDefForEach
-            val mutable = mutableClassDefBy(classDef)
-            for (method in mutable.methods.toList()) {
-                if (method.name != "KPCmEBxs") continue
-                if (method.parameters.isNotEmpty()) continue
-                if (method.returnType != "Z") continue
-                method.returnEarly(false)
-                patched++
-            }
-        }
-        if (patched == 0) {
-            reportSkip("6 CtCUGg Pro Features", "LCtCUGg.KPCmEBxs()Z not found")
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------
-// [Export] 7 - LsvcJNUbK3.NMGZ06: one of the three sub-checks of the main
-//              gate. Force it to true as well.
-// ---------------------------------------------------------------------------
-@Suppress("unused")
-val exportExp7LsvcJNUbK3Patch = patch(
-    name = "[Export] 7 LsvcJNUbK3 Allow",
-    description = "Always allow the LsvcJNUbK3 sub-check of the export Pro gate.",
-    default = false
-) {
-    compatibleWith(COMPATIBILITY)
-    execute {
-        var patched = 0
-        classDefForEach { classDef: ClassDef ->
-            if (classDef.type != "LsvcJNUbK3;") return@classDefForEach
-            val mutable = mutableClassDefBy(classDef)
-            for (method in mutable.methods.toList()) {
-                if (method.name != "NMGZ06") continue
-                if (method.parameters.size != 1) continue
-                if (method.parameters[0].type != "LUov9rzUD;") continue
-                if (method.returnType != "Z") continue
-                method.returnEarly(true)
-                patched++
-            }
-        }
-        if (patched == 0) {
-            reportSkip("7 LsvcJNUbK3 Allow", "LsvcJNUbK3.NMGZ06(LUov9rzUD)Z not found")
-        }
-    }
-}
 
 // ---------------------------------------------------------------------------
 // [Export] 8 - Diagnostics (logcat).
@@ -994,76 +674,6 @@ val exportExp9ToastPatch = patch(
 }
 
 // ---------------------------------------------------------------------------
-// [Export] 10 - WHoiaEDD.Ei8C6JWM is the Compose launcher of the export
-//               coroutine.  It looks like this:
-//
-//                   invoke-virtual {v3}, LCtCUGg;->bPrNb6O()Ljava/lang/Object;
-//                   move-result-object v2
-//                   if-nez v4, :cond_1e          <- flag set -> export
-//                   if-ne v2, v14, :cond_1f      <- mismatch -> SKIP the export
-//                   :cond_1e
-//                   move v2, v0
-//                   goto :goto_14                 <- creates LkCg72Z4t (the
-//                                                    export coroutine)
-//
-//               When the comparison fails the export coroutine is never
-//               created at all - the export dialog just flashes and closes,
-//               with no error anywhere.  Replacing the comparison with nop
-//               makes the launcher always create the coroutine.
-// ---------------------------------------------------------------------------
-@Suppress("unused")
-val exportExp10ForceExportPatch = patch(
-    name = "[Export] 10 WHoiaEDD Force Export",
-    description = "Always create the export coroutine in WHoiaEDD (skips the export-trigger check).",
-    default = false
-) {
-    compatibleWith(COMPATIBILITY)
-    execute {
-        var patched = 0
-        classDefForEach { classDef: ClassDef ->
-            if (classDef.type != "LWHoiaEDD;") return@classDefForEach
-            val mutable = mutableClassDefBy(classDef)
-            for (method in mutable.methods.toList()) {
-                if (method.name != "Ei8C6JWM") continue
-                if (method.parameters.size != 15) continue
-                if (method.parameters[0].type != "Ljava/lang/String;") continue
-                if (method.returnType != "V") continue
-                val impl = method.implementation ?: continue
-                val instrs = impl.instructions
-                // The unique site is
-                //   invoke-virtual {v3}, LCtCUGg;->bPrNb6O()Ljava/lang/Object;
-                //   move-result-object v2
-                //   if-nez v4, :cond_1e
-                //   if-ne v2, v14, :cond_1f      <- this one
-                var branch = -1
-                for (i in instrs.indices) {
-                    if (instrs[i].opcode != Opcode.INVOKE_VIRTUAL) continue
-                    val ref = refOf(instrs[i]) ?: continue
-                    if (!ref.contains("LCtCUGg;->bPrNb6O")) continue
-                    // scan forward for the "if-ne v2, v14" (labels are part of
-                    // the instruction list, so fixed offsets do not work)
-                    for (j in i + 1 until minOf(i + 12, instrs.size)) {
-                        if (instrs[j].opcode == Opcode.IF_NEZ) break
-                        if (instrs[j].opcode != Opcode.IF_NE) continue
-                        val ne = instrs[j] as? TwoRegisterInstruction ?: continue
-                        if (ne.registerA != 2 || ne.registerB != 14) continue
-                        branch = j
-                        break
-                    }
-                    if (branch >= 0) break
-                }
-                if (branch < 0) continue
-                method.replaceInstruction(branch, "nop")
-                patched++
-            }
-        }
-        if (patched == 0) {
-            reportSkip("10 WHoiaEDD Force Export", "export-trigger check not found in WHoiaEDD.Ei8C6JWM")
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------
 // [Export] 12 - LP0JcGi9.MeOIJuj: the paid-export purchase check.
 //
 // This is the check that the Export *screen* actually goes through.  The
@@ -1091,6 +701,10 @@ val exportExp10ForceExportPatch = patch(
 // Replacing that one branch with nop makes MeOIJuj always return the LilvEt
 // (allowed) result.  The nop keeps the instruction count - and therefore
 // every branch offset - intact.
+//
+// "Pro Unlock" now applies the same fix by default, so this patch is only a
+// standalone fallback for troubleshooting.  When it finds the branch already
+// replaced by nop it counts as applied instead of reporting a skip.
 // ---------------------------------------------------------------------------
 @Suppress("unused")
 val exportExp12MeOIJujPurchasePatch = patch(
@@ -1117,9 +731,14 @@ val exportExp12MeOIJujPurchasePatch = patch(
                     if (refOf(instrs[i]) != "LilvEt;") continue
                     val branch = i - 1
                     if (branch < 0) continue
-                    if (instrs[branch].opcode != Opcode.IF_EQZ) continue
-                    method.replaceInstruction(branch, "nop")
-                    patched++
+                    when (instrs[branch].opcode) {
+                        Opcode.NOP -> patched++ // already applied by Pro Unlock
+                        Opcode.IF_EQZ -> {
+                            method.replaceInstruction(branch, "nop")
+                            patched++
+                        }
+                        else -> continue
+                    }
                 }
             }
         }
@@ -1128,10 +747,3 @@ val exportExp12MeOIJujPurchasePatch = patch(
         }
     }
 }
-
-
-
-
-
-
-
