@@ -27,6 +27,9 @@ import com.android.tools.smali.dexlib2.Opcode
  *    (p0) which it passes to CtCUGg.cdo7kOuyS(). This patch replaces the move-object
  *    of p0 into v4 with const/4 v4, 0x0 (null), so the error string is null and
  *    cdo7kOuyS(null) doesn't trigger an error state, letting the export proceed.
+ *
+ * 4. CtCUGg.cdo7kOuyS(): Always returns false so Pro-gate checks based on this
+ *    method pass, allowing the export to continue past Pro feature detection.
  */
 @Suppress("unused")
 val exportProGateBypassPatch = patch(
@@ -57,15 +60,12 @@ val exportProGateBypassPatch = patch(
                 for (i in instrs.indices) {
                     val instr = instrs[i]
                     when {
-                        // PRO_REQUIRED → PLAYING
                         instr.opcode == Opcode.SGET_OBJECT &&
                             instr.toString().contains("La82eAByx;->RdpTsF:La82eAByx;") ->
                             method.replaceInstruction(
                                 i,
                                 "sget-object v0, La82eAByx;->kwEINn3:La82eAByx;"
                             )
-
-                        // ERROR → PLAYING
                         instr.opcode == Opcode.SGET_OBJECT &&
                             instr.toString().contains("La82eAByx;->Jp4lVJ:La82eAByx;") ->
                             method.replaceInstruction(
@@ -77,7 +77,7 @@ val exportProGateBypassPatch = patch(
             }
         }
 
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // 2. ZFJe6vx50.invoke — bypass y88yfJ73C() check that aborts export
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         classDefForEach { classDef: ClassDef ->
@@ -125,6 +125,34 @@ val exportProGateBypassPatch = patch(
                     if (instr.opcode == Opcode.MOVE_OBJECT_FROM16 &&
                         instr.toString().contains("v4, p0")) {
                         method.replaceInstruction(i, "const/4 v4, 0x0")
+                    }
+                }
+            }
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 4. CtCUGg.cdo7kOuyS() — always return false so Pro-gate checks pass
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        classDefForEach { classDef: ClassDef ->
+            if (classDef.type != "LCtCUGg;") return@classDefForEach
+
+            val mutable = mutableClassDefBy(classDef)
+
+            mutable.methods.firstOrNull { m ->
+                m.name == "cdo7kOuyS" &&
+                    m.parameters.size == 1 &&
+                    m.parameters[0].type == "Ljava/lang/Object;" &&
+                    m.returnType == "Z"
+            }?.let { method ->
+                val impl = method.implementation ?: return@let
+                val instrs = impl.instructions
+
+                // Replace first instruction with const/4 v0, 0x0; return v0
+                // Replace all remaining instructions with nop
+                if (instrs.isNotEmpty()) {
+                    method.replaceInstruction(0, "const/4 v0, 0x0\nreturn v0")
+                    for (i in 1 until instrs.size) {
+                        method.replaceInstruction(i, "nop")
                     }
                 }
             }
