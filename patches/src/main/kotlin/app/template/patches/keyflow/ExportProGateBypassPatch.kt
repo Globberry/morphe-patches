@@ -5,18 +5,24 @@ import app.morphe.patcher.patch.mutableClassDefBy
 import app.morphe.patcher.patch.patch
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.template.patches.shared.Constants.COMPATIBILITY
+import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.iface.ClassDef
 import com.android.tools.smali.dexlib2.Opcode
 
 /**
- * Keyflow 1.5.10 — Export Pro Gate Bypass (kCg72Z4t).
+ * Keyflow 1.5.10 — Export Pro Gate Bypass.
  *
- * When LP0JcGi9.cdo7kOuyS() returns a Ly5XhdY0 result (project uses Pro features),
- * kCg72Z4t.invokeSuspend sets the export state to PRO_REQUIRED, which causes the
- * export to fail with "Keyflow Pro required to pre-export this project".
+ * Two-part bypass for the export Pro check:
  *
- * This patch changes the PRO_REQUIRED assignment to PLAYING so the export proceeds
- * as if Pro is active.
+ * 1. kCg72Z4t.invokeSuspend: When LP0JcGi9.cdo7kOuyS() returns a Ly5XhdY0 result
+ *    (project uses Pro features), kCg72Z4t sets the export state to PRO_REQUIRED.
+ *    This patch skips that assignment entirely by replacing the sget-object of
+ *    La82eAByx.RdpTsF (PRO_REQUIRED) with const/4 v0, 0x0 (null).
+ *
+ * 2. LCWcMAXf.c3oEd: The pre-export function receives an error string parameter
+ *    (p0) which it passes to CtCUGg.cdo7kOuyS(). This patch replaces the move-object
+ *    of p0 into v4 with const/4 v4, 0x0 (null), so the error string is null and
+ *    cdo7kOuyS(null) doesn't trigger an error state, letting the export proceed.
  */
 @Suppress("unused")
 val exportProGateBypassPatch = patch(
@@ -27,29 +33,55 @@ val exportProGateBypassPatch = patch(
     compatibleWith(COMPATIBILITY)
 
     execute {
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 1. kCg72Z4t.invokeSuspend — skip setting PRO_REQUIRED export state
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         classDefForEach { classDef: ClassDef ->
             if (classDef.type != "LkCg72Z4t;") return@classDefForEach
 
             val mutable = mutableClassDefBy(classDef)
 
-            // Find invokeSuspend(Object)Object — the coroutine that gates export on Pro
-            mutable.methods.first { m ->
+            mutable.methods.firstOrNull { m ->
                 m.name == "invokeSuspend" &&
                     m.parameters.size == 1 &&
                     m.parameters[0].type == "Ljava/lang/Object;" &&
                     m.returnType == "Ljava/lang/Object;"
-            }.let { method ->
+            }?.let { method ->
                 val impl = method.implementation ?: return@let
                 val instrs = impl.instructions
 
-                // Find the sget-object ...->RdpTsF (PRO_REQUIRED) at :cond_8 and
-                // replace it with ...->kwEINn3 (PLAYING) so the export proceeds.
-                for (i in instrs.indices.reversed()) {
+                for (i in instrs.indices) {
                     val instr = instrs[i]
                     if (instr.opcode == Opcode.SGET_OBJECT &&
                         instr.toString().contains("La82eAByx;->RdpTsF:La82eAByx;")) {
-                        method.replaceInstruction(i,
-                            "sget-object v0, La82eAByx;->kwEINn3:La82eAByx;")
+                        method.replaceInstruction(i, "const/4 v0, 0x0")
+                    }
+                }
+            }
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 2. LCWcMAXf.c3oEd — pass null error string instead of the actual error
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        classDefForEach { classDef: ClassDef ->
+            if (classDef.type != "LCWcMAXf;") return@classDefForEach
+
+            val mutable = mutableClassDefBy(classDef)
+
+            mutable.methods.firstOrNull { m ->
+                m.name == "c3oEd" &&
+                    m.returnType == "V" &&
+                    (m.accessFlags and AccessFlags.STATIC.value) != 0 &&
+                    m.parameters.firstOrNull { it.type == "Ljava/lang/String;" } != null
+            }?.let { method ->
+                val impl = method.implementation ?: return@let
+                val instrs = impl.instructions
+
+                for (i in instrs.indices) {
+                    val instr = instrs[i]
+                    if (instr.opcode == Opcode.MOVE_OBJECT_FROM16 &&
+                        instr.toString().contains("v4, p0")) {
+                        method.replaceInstruction(i, "const/4 v4, 0x0")
                     }
                 }
             }
