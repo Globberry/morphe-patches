@@ -1,3 +1,9 @@
+## [1.4.0](https://github.com/Globberry/morphe-patches/compare/v1.3.9...v1.4.0) (2026-11-11)
+
+### ✨ New Features
+
+* 10 individually toggleable [Export] patches for the 1.5.10 Pro export gate ([c3afd46](https://github.com/Globberry/morphe-patches/commit/c3afd462ac65f6910985550b414f2d5285425cce))
+
 ## [1.3.9](https://github.com/Globberry/morphe-patches/compare/v1.3.8...v1.3.9) (2026-11-11)
 
 ### 🐛 Bug Fixes
