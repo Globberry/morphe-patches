@@ -1,3 +1,9 @@
+## [1.3.7](https://github.com/Globberry/morphe-patches/compare/v1.3.6...v1.3.7) (2026-11-11)
+
+### 🐛 Bug Fixes
+
+* CtCUGg.cdo7kOuyS() - replace all instructions to avoid VerifyError ([3b20b64](https://github.com/Globberry/morphe-patches/commit/3b20b64aea409ca318228b6a862652ba88dafb05))
+
 ## [1.3.6](https://github.com/Globberry/morphe-patches/compare/v1.3.5...v1.3.6) (2026-11-11)
 
 ### 🐛 Bug Fixes
