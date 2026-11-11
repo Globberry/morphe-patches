@@ -3,6 +3,7 @@
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.removeInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
+import app.morphe.patcher.extensions.InstructionExtensions.replaceInstructions
 import app.morphe.patcher.patch.classDefForEach
 import app.morphe.patcher.patch.mutableClassDefBy
 import app.morphe.patcher.patch.patch
@@ -81,6 +82,90 @@ internal fun safeInsertInstructions(
     val before = impl.instructions.size
     method.addInstructions(index, smali)
     return impl.instructions.size > before
+}
+
+/**
+ * Reports a patch that could not find its anchor.  This is deliberately NOT a
+ * hard error: one broken patch must never abort the whole patch run, because
+ * the point of this suite is to try many combinations.
+ */
+/**
+ * Replaces the instruction at [index] with [smali].
+ *
+ * IMPORTANT: `replaceInstructions(index, list)` in the Morphe patcher removes
+ * `list.size()` original instructions and then adds `list.size()` new ones -
+ * so it silently swallows the instructions that follow.  Adding first and
+ * removing the original afterwards replaces exactly one instruction and keeps
+ * the instruction count (and therefore every branch offset) intact.
+ */
+internal fun safeReplaceInstructions(
+    method: app.morphe.patcher.util.proxy.mutableTypes.MutableMethod,
+    index: Int,
+    smali: String
+): Boolean {
+    val count = smali.trim().lines().count { it.isNotBlank() }
+    if (count == 0) return false
+    val impl = method.implementation ?: return false
+    val before = impl.instructions.size
+    method.addInstructions(index, smali)
+    val added = impl.instructions.size - before
+    if (added != count) {
+        // the snippet did not compile - roll back whatever made it in
+        repeat(added) { method.removeInstruction(index) }
+        return false
+    }
+    // the original instruction now sits right behind the new block
+    method.removeInstruction(index + count)
+    return true
+}
+
+/**
+ * Renders an instruction back to smali so that it can be re-emitted after a
+ * log statement.  Returns null for formats that are not supported.
+ */
+internal fun renderInstruction(instr: Instruction): String? {
+    val op = instr.opcode.name
+    return when {
+        instr is TwoRegisterInstruction && instr is ReferenceInstruction ->
+            "$op v${instr.registerA}, v${instr.registerB}, ${instr.reference}"
+        instr is OneRegisterInstruction && instr is ReferenceInstruction ->
+            "$op v${instr.registerA}, ${instr.reference}"
+        instr is OneRegisterInstruction && instr is NarrowLiteralInstruction ->
+            "$op v${instr.registerA}, ${instr.narrowLiteral}"
+        instr is TwoRegisterInstruction ->
+            "$op v${instr.registerA}, v${instr.registerB}"
+        else -> null
+    }
+}
+
+/**
+ * Inserts a log statement in front of the instruction at [index].
+ *
+ * ONLY inserting is safe: `replaceInstructions(index, list)` in the Morphe
+ * patcher removes `list.size()` original instructions and then adds
+ * `list.size()` new ones, so it silently swallows the instructions that
+ * follow the replaced one.  Inserting never removes anything.
+ *
+ * [reg] is the register the log uses, [valueReg] an optional second register
+ * whose value is logged (e.g. the error message).
+ */
+internal fun insertLogBefore(
+    method: app.morphe.patcher.util.proxy.mutableTypes.MutableMethod,
+    index: Int,
+    reg: Int,
+    message: String,
+    valueReg: Int? = null
+): Boolean {
+    val call = if (valueReg != null) {
+        "invoke-static {v$reg, v$valueReg}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I"
+    } else {
+        "invoke-static {v$reg, v$reg}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I"
+    }
+    val smali = """
+        const-string v$reg, "$message"
+        $call
+    """.trimIndent()
+    return safeInsertInstructions(method, index, smali)
 }
 
 /**
@@ -360,52 +445,36 @@ val exportExp5KCg72Z4tStatePatch = patch(
 }
 
 // ---------------------------------------------------------------------------
-// [Export] 6 - LCWcMAXf.c3oEd: the pre-export step receives the error message
-//              as its first argument and forwards it to LCtCUGg.cdo7kOuyS(),
-//              which then flips the export state into "error".
+// [Export] 6 - LCtCUGg.KPCmEBxs: "does the project use Pro features?".
+//              Forcing it to false makes the second gate (y88yfJ73C) allow the
+//              export and stops the Pro features from being reported.
 //
-//                  move-object/from16 v4, p0        <- replace with ""
-//                  invoke-virtual {v0, v4}, LCtCUGg;->cdo7kOuyS(Ljava/lang/Object;)Z
-//
-//              NOTE: an *empty* string is used on purpose.  A null string ends
-//              up in the export state and the app later calls String.length()
-//              on it -> NullPointerException.
+//              NOTE: this used to blank out the message that
+//              LCWcMAXf.c3oEd puts into the UI state, which wiped every
+//              button label of the app.  That is why it is gone.
 // ---------------------------------------------------------------------------
 @Suppress("unused")
-val exportExp6LCWcMAXfErrorPatch = patch(
-    name = "[Export] 6 LCWcMAXf Error",
-    description = "Replace the pre-export error message with an empty string.",
+val exportExp6CtCUGgProPatch = patch(
+    name = "[Export] 6 CtCUGg Pro Features",
+    description = "Pretend the project uses no Pro features (LCtCUGg.KPCmEBxs).",
     default = false
 ) {
     compatibleWith(COMPATIBILITY)
     execute {
         var patched = 0
         classDefForEach { classDef: ClassDef ->
-            if (classDef.type != "LCWcMAXf;") return@classDefForEach
+            if (classDef.type != "LCtCUGg;") return@classDefForEach
             val mutable = mutableClassDefBy(classDef)
             for (method in mutable.methods.toList()) {
-                if (method.name != "c3oEd") continue
-                if (method.returnType != "V") continue
-                if (method.parameters.isEmpty()) continue
-                if (method.parameters[0].type != "Ljava/lang/String;") continue
-                val impl = method.implementation ?: continue
-                val instrs = impl.instructions
-                val p0 = firstParamRegister(method)
-                val targets = mutableListOf<Int>()
-                for (i in instrs.indices) {
-                    if (instrs[i].opcode != Opcode.MOVE_OBJECT_FROM16) continue
-                    if (srcRegister(instrs[i]) != p0) continue
-                    targets.add(i)
-                }
-                for (i in targets.reversed()) {
-                    val reg = destRegister(instrs[i]) ?: continue
-                    method.replaceInstruction(i, "const-string v$reg, \"\"")
-                    patched++
-                }
+                if (method.name != "KPCmEBxs") continue
+                if (method.parameters.isNotEmpty()) continue
+                if (method.returnType != "Z") continue
+                method.returnEarly(false)
+                patched++
             }
         }
         if (patched == 0) {
-            reportSkip("6 LCWcMAXf Error", "error-message argument not found in LCWcMAXf.c3oEd")
+            reportSkip("6 CtCUGg Pro Features", "LCtCUGg.KPCmEBxs()Z not found")
         }
     }
 }
@@ -469,6 +538,25 @@ val exportExp8DiagnosticsPatch = patch(
     execute {
         var patched = 0
 
+        // ---- LP0JcGi9.cdo7kOuyS: the export function itself ------------------
+        //      The first instruction writes its destination register, so the
+        //      log can use that very register and the original instruction
+        //      simply overwrites it again.
+        classDefForEach { classDef: ClassDef ->
+            if (classDef.type != "LP0JcGi9;") return@classDefForEach
+            val mutable = mutableClassDefBy(classDef)
+            for (method in mutable.methods.toList()) {
+                if (method.name != "cdo7kOuyS") continue
+                if (method.parameters.isEmpty()) continue
+                if (method.parameters[0].type != "Landroid/content/Context;") continue
+                val impl = method.implementation ?: continue
+                val instrs = impl.instructions
+                if (instrs.isEmpty()) continue
+                if (!insertLogBefore(method, 0, 0, "KFPro: export function entered")) continue
+                patched++
+            }
+        }
+
         // ---- LkCg72Z4t.invokeSuspend: the export coroutine ------------------
         classDefForEach { classDef: ClassDef ->
             if (classDef.type != "LkCg72Z4t;") return@classDefForEach
@@ -479,7 +567,68 @@ val exportExp8DiagnosticsPatch = patch(
                 if (method.returnType != "Ljava/lang/Object;") continue
                 val impl = method.implementation ?: continue
                 val instrs = impl.instructions
+                if (instrs.isEmpty()) continue
 
+                // (index, smali) pairs - applied back to front so that the
+                // indices stay valid while we work.
+                val inserts = mutableListOf<Pair<Int, String>>()
+
+                fun log(index: Int, reg: Int, message: String, valueReg: Int? = null) {
+                    val call = if (valueReg != null) {
+                        "invoke-static {v$reg, v$valueReg}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I"
+                    } else {
+                        "invoke-static {v$reg, v$reg}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I"
+                    }
+                    inserts.add(index to "const-string v$reg, \"$message\"\n$call")
+                }
+
+                // "export coroutine started" - the very first thing the
+                // export coroutine does
+                log(0, 12, "KFPro: export coroutine started")
+
+                // (b) "export function returned" - the export function is done.
+                //     v6 is dead at that point.
+                for (i in instrs.indices) {
+                    if (instrs[i].opcode != Opcode.CHECK_CAST) continue
+                    if (refOf(instrs[i]) != "LiGu8W;") continue
+                    log(i + 1, 6, "KFPro: export function returned")
+                    break
+                }
+
+                // (c) "export SUCCEEDED" - the result was a success result
+                for (i in instrs.indices) {
+                    if (instrs[i].opcode != Opcode.INSTANCE_OF) continue
+                    if (refOf(instrs[i]) != "LRBnKeZA7;") continue
+                    for (j in i + 1 until instrs.size) {
+                        if (instrs[j].opcode == Opcode.IF_EQZ) {
+                            log(j + 1, 6, "KFPro: export SUCCEEDED")
+                            break
+                        }
+                    }
+                    break
+                }
+
+                // (d) "export FAILED" - the result was an error result
+                for (i in instrs.indices) {
+                    if (instrs[i].opcode != Opcode.INSTANCE_OF) continue
+                    if (refOf(instrs[i]) != "LR7XqhtD;") continue
+                    for (j in i + 1 until instrs.size) {
+                        if (instrs[j].opcode == Opcode.IF_EQZ) {
+                            log(j + 1, 6, "KFPro: export FAILED")
+                            break
+                        }
+                    }
+                    break
+                }
+
+                // (e) the error message itself (v0 holds it at that point)
+                for (i in instrs.indices) {
+                    if (instrs[i].opcode != Opcode.IGET_OBJECT) continue
+                    val ref = refOf(instrs[i]) ?: continue
+                    if (!ref.contains("LkCg72Z4t;->oMKv6w5")) continue
+                    log(i + 1, 6, "KFPro", 0)
+                    break
+                }
 
                 // (f) "export result is a Pro result" - the Pro result branch
                 for (i in instrs.indices) {
@@ -487,20 +636,17 @@ val exportExp8DiagnosticsPatch = patch(
                     if (refOf(instrs[i]) != "Ly5XhdY0;") continue
                     for (j in i + 1 until instrs.size) {
                         if (instrs[j].opcode == Opcode.IF_EQZ) {
-                            if (!safeInsertInstructions(
-                                    method,
-                                    j + 1,
-                                    """
-                                    const-string v6, "KFPro: export result is a Pro result (Ly5XhdY0) -> PRO_REQUIRED"
-                                    invoke-static {v6, v6}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
-                                    """.trimIndent()
-                                )
-                            ) break
-                            patched++
+                            log(j + 1, 6, "KFPro: export result is a Pro result (Ly5XhdY0) -> PRO_REQUIRED")
                             break
                         }
                     }
                     break
+                }
+
+                // apply everything back to front so the indices stay valid
+                for ((index, smali) in inserts.sortedByDescending { it.first }) {
+                    if (!safeInsertInstructions(method, index, smali)) continue
+                    patched++
                 }
             }
         }
@@ -562,7 +708,7 @@ val exportExp8DiagnosticsPatch = patch(
                 for (i in targets.reversed()) {
                     if (!safeInsertInstructions(
                             method,
-                            i,
+                            i + 1,
                             """
                             const-string v0, "KFPro: y88yfJ73C returned FALSE -> export blocked by this gate"
                             invoke-static {v0, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
@@ -640,6 +786,7 @@ val exportExp9ToastPatch = patch(
         }
     }
 }
+
 
 
 
