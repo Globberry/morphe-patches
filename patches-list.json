@@ -1,6 +1,6 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "patches": [
     {
       "name": "Keyflow Export Pro Gate Bypass",
@@ -300,33 +300,6 @@
       "options": []
     },
     {
-      "name": "[Export] 10 LP4eSlPPu Allow",
-      "description": "Always allow an individual Pro feature (LP4eSlPPu.invoke).",
-      "default": false,
-      "category": null,
-      "compatiblePackages": [
-        {
-          "packageName": "com.angkin.keyflow",
-          "name": "Keyflow",
-          "description": null,
-          "apkFileType": "APKS",
-          "appIconColor": "#FF0045",
-          "signatures": null,
-          "formFactor": "MOBILE",
-          "targets": [
-            {
-              "version": "1.5.10",
-              "versionCodes": null,
-              "isExperimental": false,
-              "minSdk": null,
-              "description": null
-            }
-          ]
-        }
-      ],
-      "options": []
-    },
-    {
       "name": "[Export] 2 kts6dAU4 Throw",
       "description": "Do not throw the Pro-required exception (LwNKvkk7) during export.",
       "default": false,
@@ -436,7 +409,7 @@
     },
     {
       "name": "[Export] 6 LCWcMAXf Error",
-      "description": "Pass a null error message into the pre-export step.",
+      "description": "Replace the pre-export error message with an empty string.",
       "default": false,
       "category": null,
       "compatiblePackages": [
@@ -490,7 +463,7 @@
     },
     {
       "name": "[Export] 8 Diagnostics",
-      "description": "Log every export Pro gate decision to logcat (tag KFPro). Read with: adb logcat -s KFPro",
+      "description": "Log the whole export flow to logcat (tag KFPro). Read with: adb logcat -s KFPro",
       "default": false,
       "category": null,
       "compatiblePackages": [

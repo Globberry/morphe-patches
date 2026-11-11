@@ -1,3 +1,9 @@
+## [1.4.1](https://github.com/Globberry/morphe-patches/compare/v1.4.0...v1.4.1) (2026-11-11)
+
+### 🐛 Bug Fixes
+
+* [Export] suite - remove the crashy LP4eSlPPu patch, make every patch ([9178d3b](https://github.com/Globberry/morphe-patches/commit/9178d3b611fd13fda2e38ecef8f48f598c971973))
+
 ## [1.4.0](https://github.com/Globberry/morphe-patches/compare/v1.3.9...v1.4.0) (2026-11-11)
 
 ### ✨ New Features
