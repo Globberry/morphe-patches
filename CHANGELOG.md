@@ -1,3 +1,10 @@
+## [1.7.2](https://github.com/Globberry/morphe-patches/compare/v1.7.1...v1.7.2) (2026-11-11)
+
+### 🐛 Bug Fixes
+
+* accept the export-screen purchase check (P0JcGi9.MeOIJuj) ([0a0e55a](https://github.com/Globberry/morphe-patches/commit/0a0e55a5180d30612232fefcc4ca4ea4f694c310))
+* enable the export purchase bypass by default ([14795c5](https://github.com/Globberry/morphe-patches/commit/14795c5688f11853eb8db2f02666ad190d89e3d5))
+
 ## [1.7.1](https://github.com/Globberry/morphe-patches/compare/v1.7.0...v1.7.1) (2026-11-11)
 
 ### 🐛 Bug Fixes

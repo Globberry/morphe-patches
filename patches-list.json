@@ -1,11 +1,11 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "patches": [
     {
       "name": "Keyflow Export Pro Gate Bypass",
-      "description": "Allows exporting projects that use Pro features by bypassing the Pro gate in the export pipeline.",
-      "default": false,
+      "description": "Allows exporting projects that use Pro features by bypassing the Pro purchase checks in the export pipeline.",
+      "default": true,
       "category": null,
       "compatiblePackages": [
         {
@@ -302,6 +302,33 @@
     {
       "name": "[Export] 10 WHoiaEDD Force Export",
       "description": "Always create the export coroutine in WHoiaEDD (skips the export-trigger check).",
+      "default": false,
+      "category": null,
+      "compatiblePackages": [
+        {
+          "packageName": "com.angkin.keyflow",
+          "name": "Keyflow",
+          "description": null,
+          "apkFileType": "APKS",
+          "appIconColor": "#FF0045",
+          "signatures": null,
+          "formFactor": "MOBILE",
+          "targets": [
+            {
+              "version": "1.5.10",
+              "versionCodes": null,
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            }
+          ]
+        }
+      ],
+      "options": []
+    },
+    {
+      "name": "[Export] 12 Purchase Allow",
+      "description": "Always accept the paid-export purchase check (LP0JcGi9.MeOIJuj).",
       "default": false,
       "category": null,
       "compatiblePackages": [
