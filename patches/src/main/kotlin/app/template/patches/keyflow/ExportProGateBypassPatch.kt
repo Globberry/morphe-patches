@@ -10,7 +10,7 @@ import com.android.tools.smali.dexlib2.iface.ClassDef
 import com.android.tools.smali.dexlib2.Opcode
 
 /**
- * Keyflow 1.5.10 — Export Pro Gate Bypass (comprehensive).
+ * Keyflow 1.5.10 — Export Pro Gate Bypass.
  *
  * Multi-part bypass for the export Pro check:
  *
@@ -27,9 +27,6 @@ import com.android.tools.smali.dexlib2.Opcode
  *    (p0) which it passes to CtCUGg.cdo7kOuyS(). This patch replaces the move-object
  *    of p0 into v4 with const/4 v4, 0x0 (null), so the error string is null and
  *    cdo7kOuyS(null) doesn't trigger an error state, letting the export proceed.
- *
- * 4. CtCUGg.cdo7kOuyS(): Always returns false so that all Pro-gate checks based on
- *    this method pass, allowing the export to continue past Pro feature detection.
  */
 @Suppress("unused")
 val exportProGateBypassPatch = patch(
@@ -129,37 +126,6 @@ val exportProGateBypassPatch = patch(
                         instr.toString().contains("v4, p0")) {
                         method.replaceInstruction(i, "const/4 v4, 0x0")
                     }
-                }
-            }
-        }
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 4. CtCUGg.cdo7kOuyS() — always return false so Pro-gate checks pass
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        classDefForEach { classDef: ClassDef ->
-            if (classDef.type != "LCtCUGg;") return@classDefForEach
-
-            val mutable = mutableClassDefBy(classDef)
-
-            mutable.methods.firstOrNull { m ->
-                m.name == "cdo7kOuyS" &&
-                    m.parameters.size == 1 &&
-                    m.parameters[0].type == "Ljava/lang/Object;" &&
-                    m.returnType == "Z"
-            }?.let { method ->
-                val impl = method.implementation ?: return@let
-                val instrs = impl.instructions
-
-                // Replace the first instruction (invoke-virtual OoXhupy0n) with
-                // const/4 v0, 0x0; return v0 — always return false.
-                if (instrs.isNotEmpty() && instrs[0].opcode == Opcode.INVOKE_VIRTUAL) {
-                    method.replaceInstruction(
-                        0,
-                        """
-                            const/4 v0, 0x0
-                            return v0
-                        """
-                    )
                 }
             }
         }
