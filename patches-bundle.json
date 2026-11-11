@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-10T23:41:25",
-  "description": "## [1.3.2](https://github.com/Globberry/morphe-patches/compare/v1.3.1...v1.3.2) (2026-11-10)\n\n### 🐛 Bug Fixes\n\n* bypass Pro gate in export pipeline (kCg72Z4t) ([9700f07](https://github.com/Globberry/morphe-patches/commit/9700f07090d063e0ec0a0f01e6b8223861d3a486))",
-  "download_url": "https://github.com/Globberry/morphe-patches/releases/download/v1.3.2/patches-1.3.2.mpp",
+  "created_at": "2026-11-11T00:35:55",
+  "description": "## [1.3.3](https://github.com/Globberry/morphe-patches/compare/v1.3.2...v1.3.3) (2026-11-11)\n\n### 🐛 Bug Fixes\n\n* strengthen Export Pro Gate Bypass - null out both state and error ([cda2cce](https://github.com/Globberry/morphe-patches/commit/cda2cce9ff5ccbaf439def7008469a446a8e8946))",
+  "download_url": "https://github.com/Globberry/morphe-patches/releases/download/v1.3.3/patches-1.3.3.mpp",
   "signature_download_url": "",
-  "version": "1.3.2"
+  "version": "1.3.3"
 }

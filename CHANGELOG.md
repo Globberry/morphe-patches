@@ -1,3 +1,9 @@
+## [1.3.3](https://github.com/Globberry/morphe-patches/compare/v1.3.2...v1.3.3) (2026-11-11)
+
+### 🐛 Bug Fixes
+
+* strengthen Export Pro Gate Bypass - null out both state and error ([cda2cce](https://github.com/Globberry/morphe-patches/commit/cda2cce9ff5ccbaf439def7008469a446a8e8946))
+
 ## [1.3.2](https://github.com/Globberry/morphe-patches/compare/v1.3.1...v1.3.2) (2026-11-10)
 
 ### 🐛 Bug Fixes
