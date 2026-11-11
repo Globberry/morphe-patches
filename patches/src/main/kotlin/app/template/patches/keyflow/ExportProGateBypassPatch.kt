@@ -12,14 +12,18 @@ import com.android.tools.smali.dexlib2.Opcode
 /**
  * Keyflow 1.5.10 — Export Pro Gate Bypass.
  *
- * Two-part bypass for the export Pro check:
+ * Multi-part bypass for the export Pro check:
  *
  * 1. kCg72Z4t.invokeSuspend: When LP0JcGi9.cdo7kOuyS() returns a Ly5XhdY0 result
  *    (project uses Pro features), kCg72Z4t sets the export state to PRO_REQUIRED.
- *    This patch skips that assignment entirely by replacing the sget-object of
+ *    This patch skips that assignment by replacing the sget-object of
  *    La82eAByx.RdpTsF (PRO_REQUIRED) with const/4 v0, 0x0 (null).
  *
- * 2. LCWcMAXf.c3oEd: The pre-export function receives an error string parameter
+ * 2. ZFJe6vx50.invoke: Bypasses the y88yfJ73C() check that aborts export when it
+ *    returns false (goto :cond_8 → SMcDS7U()). Replaces if-eqz v2, :cond_8 with nop
+ *    so execution always proceeds past the check.
+ *
+ * 3. LCWcMAXf.c3oEd: The pre-export function receives an error string parameter
  *    (p0) which it passes to CtCUGg.cdo7kOuyS(). This patch replaces the move-object
  *    of p0 into v4 with const/4 v4, 0x0 (null), so the error string is null and
  *    cdo7kOuyS(null) doesn't trigger an error state, letting the export proceed.
@@ -61,8 +65,34 @@ val exportProGateBypassPatch = patch(
         }
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 2. LCWcMAXf.c3oEd — pass null error string instead of the actual error
+        // 2. ZFJe6vx50.invoke — bypass y88yfJ73C() check that aborts export
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        classDefForEach { classDef: ClassDef ->
+            if (classDef.type != "LZFJe6vx50;") return@classDefForEach
+
+            val mutable = mutableClassDefBy(classDef)
+
+            mutable.methods.firstOrNull { m ->
+                m.name == "invoke" &&
+                    m.parameters.size == 2 &&
+                    m.returnType == "Ljava/lang/Object;"
+            }?.let { method ->
+                val impl = method.implementation ?: return@let
+                val instrs = impl.instructions
+
+                for (i in instrs.indices) {
+                    val instr = instrs[i]
+                    if (instr.opcode == Opcode.IF_EQZ &&
+                        instr.toString().contains(":cond_8")) {
+                        method.replaceInstruction(i, "nop")
+                    }
+                }
+            }
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 3. LCWcMAXf.c3oEd — pass null error string instead of the actual error
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         classDefForEach { classDef: ClassDef ->
             if (classDef.type != "LCWcMAXf;") return@classDefForEach
 
