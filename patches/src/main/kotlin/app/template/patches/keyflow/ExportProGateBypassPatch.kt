@@ -27,10 +27,6 @@ import com.android.tools.smali.dexlib2.Opcode
  *    (p0) which it passes to CtCUGg.cdo7kOuyS(). This patch replaces the move-object
  *    of p0 into v4 with const/4 v4, 0x0 (null), so the error string is null and
  *    cdo7kOuyS(null) doesn't trigger an error state, letting the export proceed.
- *
- * 4. CtCUGg.cdo7kOuyS(): Always return false so Pro-gate checks pass.
- *    Replace instruction 0 with "const/4 v0, 0x0" and instruction 1 with
- *    "return v0". All subsequent instructions are unreachable after return v0.
  */
 @Suppress("unused")
 val exportProGateBypassPatch = patch(
@@ -127,33 +123,6 @@ val exportProGateBypassPatch = patch(
                         instr.toString().contains("v4, p0")) {
                         method.replaceInstruction(i, "const/4 v4, 0x0")
                     }
-                }
-            }
-        }
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 4. CtCUGg.cdo7kOuyS() — always return false so Pro-gate checks pass
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // Replace instruction 0 (invoke-virtual OoXhupy0n) with "const/4 v0, 0x0"
-        // and instruction 1 (move-result-object v0) with "return v0".
-        // All subsequent instructions become unreachable after return v0.
-        classDefForEach { classDef: ClassDef ->
-            if (classDef.type != "LCtCUGg;") return@classDefForEach
-
-            val mutable = mutableClassDefBy(classDef)
-
-            mutable.methods.firstOrNull { m ->
-                m.name == "cdo7kOuyS" &&
-                    m.parameters.size == 1 &&
-                    m.parameters[0].type == "Ljava/lang/Object;" &&
-                    m.returnType == "Z"
-            }?.let { method ->
-                val impl = method.implementation ?: return@let
-                val instrs = impl.instructions
-
-                if (instrs.size >= 2) {
-                    method.replaceInstruction(0, "const/4 v0, 0x0")
-                    method.replaceInstruction(1, "return v0")
                 }
             }
         }
