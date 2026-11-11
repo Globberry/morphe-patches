@@ -1,3 +1,9 @@
+## [1.3.4](https://github.com/Globberry/morphe-patches/compare/v1.3.3...v1.3.4) (2026-11-11)
+
+### 🐛 Bug Fixes
+
+* strengthen Export Pro Gate Bypass - add ZFJe6vx50 y88yfJ73C bypass ([f1d49e4](https://github.com/Globberry/morphe-patches/commit/f1d49e44bfdcac24e33df1d261d22e0b94fa8a96))
+
 ## [1.3.3](https://github.com/Globberry/morphe-patches/compare/v1.3.2...v1.3.3) (2026-11-11)
 
 ### 🐛 Bug Fixes
