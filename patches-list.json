@@ -1,6 +1,6 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "patches": [
     {
       "name": "Keyflow Export Pro Gate Bypass",
@@ -302,6 +302,33 @@
     {
       "name": "[Export] 10 WHoiaEDD Force Export",
       "description": "Always create the export coroutine in WHoiaEDD (skips the export-trigger check).",
+      "default": false,
+      "category": null,
+      "compatiblePackages": [
+        {
+          "packageName": "com.angkin.keyflow",
+          "name": "Keyflow",
+          "description": null,
+          "apkFileType": "APKS",
+          "appIconColor": "#FF0045",
+          "signatures": null,
+          "formFactor": "MOBILE",
+          "targets": [
+            {
+              "version": "1.5.10",
+              "versionCodes": null,
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            }
+          ]
+        }
+      ],
+      "options": []
+    },
+    {
+      "name": "[Export] 11 Ldm1 Allow Export",
+      "description": "Always let the export start (Ldm1.oJpK3JT6v: the context's export check returns TRUE).",
       "default": false,
       "category": null,
       "compatiblePackages": [

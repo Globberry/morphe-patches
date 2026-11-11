@@ -1,3 +1,9 @@
+## [1.7.0](https://github.com/Globberry/morphe-patches/compare/v1.6.0...v1.7.0) (2026-11-11)
+
+### ✨ New Features
+
+* [Export] 11 Ldm1 Allow Export - the export-start check ([8733d67](https://github.com/Globberry/morphe-patches/commit/8733d6770141e6f6baf712736ba8d241bb0cb9e1))
+
 ## [1.6.0](https://github.com/Globberry/morphe-patches/compare/v1.5.0...v1.6.0) (2026-11-11)
 
 ### ✨ New Features
