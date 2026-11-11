@@ -19,7 +19,7 @@ Click the button below, or manually add this repo url to Morphe Manager: https:/
 ## 🩹 Patches list
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.4.1](https://github.com/Globberry/morphe-patches/releases/tag/v1.4.1)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;19 patches total
+> **[v1.5.0](https://github.com/Globberry/morphe-patches/releases/tag/v1.5.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;19 patches total
 <details open>
 <summary>📦 Keyflow&nbsp;&nbsp;•&nbsp;&nbsp;19 patches</summary>
 <br>
@@ -48,7 +48,7 @@ Click the button below, or manually add this repo url to Morphe Manager: https:/
 | [[Export] 3 y88yfJ73C Allow](#export-3-y88yfj73c-allow) | Always let the export pass the LCtCUGg.y88yfJ73C abort check. |  |
 | [[Export] 4 ZFJe6vx50 Skip](#export-4-zfje6vx50-skip) | Never take the export-abort branch in LZFJe6vx50.invoke. |  |
 | [[Export] 5 kCg72Z4t State](#export-5-kcg72z4t-state) | Publish PLAYING instead of PRO_REQUIRED/ERROR as export state. |  |
-| [[Export] 6 LCWcMAXf Error](#export-6-lcwcmaxf-error) | Replace the pre-export error message with an empty string. |  |
+| [[Export] 6 CtCUGg Pro Features](#export-6-ctcugg-pro-features) | Pretend the project uses no Pro features (LCtCUGg.KPCmEBxs). |  |
 | [[Export] 7 LsvcJNUbK3 Allow](#export-7-lsvcjnubk3-allow) | Always allow the LsvcJNUbK3 sub-check of the export Pro gate. |  |
 | [[Export] 8 Diagnostics](#export-8-diagnostics) | Log the whole export flow to logcat (tag KFPro). Read with: adb logcat -s KFPro |  |
 | [[Export] 9 Toast](#export-9-toast) | Show a toast naming the reason the export was cancelled. |  |

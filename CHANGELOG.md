@@ -1,3 +1,9 @@
+## [1.5.0](https://github.com/Globberry/morphe-patches/compare/v1.4.1...v1.5.0) (2026-11-11)
+
+### ✨ New Features
+
+* full export trace + fix the instruction-eating replace primitive ([99f69f6](https://github.com/Globberry/morphe-patches/commit/99f69f6e94541ebee302ccdd717ad6744391692f))
+
 ## [1.4.1](https://github.com/Globberry/morphe-patches/compare/v1.4.0...v1.4.1) (2026-11-11)
 
 ### 🐛 Bug Fixes
