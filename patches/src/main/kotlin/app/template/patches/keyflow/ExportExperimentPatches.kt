@@ -710,7 +710,7 @@ val exportExp8DiagnosticsPatch = patch(
                             method,
                             i + 1,
                             """
-                            const-string v0, "KFPro: y88yfJ73C returned FALSE -> export blocked by this gate"
+                            const-string v0, "KFPro: y88yfJ73C: project uses Pro features (gate now returns TRUE)"
                             invoke-static {v0, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
                             const/4 v0, 0x1
                             """.trimIndent()
@@ -786,6 +786,77 @@ val exportExp9ToastPatch = patch(
         }
     }
 }
+
+// ---------------------------------------------------------------------------
+// [Export] 10 - WHoiaEDD.Ei8C6JWM is the Compose launcher of the export
+//               coroutine.  It looks like this:
+//
+//                   invoke-virtual {v3}, LCtCUGg;->bPrNb6O()Ljava/lang/Object;
+//                   move-result-object v2
+//                   if-nez v4, :cond_1e          <- flag set -> export
+//                   if-ne v2, v14, :cond_1f      <- mismatch -> SKIP the export
+//                   :cond_1e
+//                   move v2, v0
+//                   goto :goto_14                 <- creates LkCg72Z4t (the
+//                                                    export coroutine)
+//
+//               When the comparison fails the export coroutine is never
+//               created at all - the export dialog just flashes and closes,
+//               with no error anywhere.  Replacing the comparison with nop
+//               makes the launcher always create the coroutine.
+// ---------------------------------------------------------------------------
+@Suppress("unused")
+val exportExp10ForceExportPatch = patch(
+    name = "[Export] 10 WHoiaEDD Force Export",
+    description = "Always create the export coroutine in WHoiaEDD (skips the export-trigger check).",
+    default = false
+) {
+    compatibleWith(COMPATIBILITY)
+    execute {
+        var patched = 0
+        classDefForEach { classDef: ClassDef ->
+            if (classDef.type != "LWHoiaEDD;") return@classDefForEach
+            val mutable = mutableClassDefBy(classDef)
+            for (method in mutable.methods.toList()) {
+                if (method.name != "Ei8C6JWM") continue
+                if (method.parameters.size != 15) continue
+                if (method.parameters[0].type != "Ljava/lang/String;") continue
+                if (method.returnType != "V") continue
+                val impl = method.implementation ?: continue
+                val instrs = impl.instructions
+                // The unique site is
+                //   invoke-virtual {v3}, LCtCUGg;->bPrNb6O()Ljava/lang/Object;
+                //   move-result-object v2
+                //   if-nez v4, :cond_1e
+                //   if-ne v2, v14, :cond_1f      <- this one
+                var branch = -1
+                for (i in instrs.indices) {
+                    if (instrs[i].opcode != Opcode.INVOKE_VIRTUAL) continue
+                    val ref = refOf(instrs[i]) ?: continue
+                    if (!ref.contains("LCtCUGg;->bPrNb6O")) continue
+                    // scan forward for the "if-ne v2, v14" (labels are part of
+                    // the instruction list, so fixed offsets do not work)
+                    for (j in i + 1 until minOf(i + 12, instrs.size)) {
+                        if (instrs[j].opcode == Opcode.IF_NEZ) break
+                        if (instrs[j].opcode != Opcode.IF_NE) continue
+                        val ne = instrs[j] as? TwoRegisterInstruction ?: continue
+                        if (ne.registerA != 2 || ne.registerB != 14) continue
+                        branch = j
+                        break
+                    }
+                    if (branch >= 0) break
+                }
+                if (branch < 0) continue
+                method.replaceInstruction(branch, "nop")
+                patched++
+            }
+        }
+        if (patched == 0) {
+            reportSkip("10 WHoiaEDD Force Export", "export-trigger check not found in WHoiaEDD.Ei8C6JWM")
+        }
+    }
+}
+
 
 
 
