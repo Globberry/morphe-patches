@@ -24,6 +24,11 @@ import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 // NOTE: the instruction objects handed out by the Morphe patcher are
 // `BuilderInstruction`s whose `toString()` is the default Object one, so all
 // matching has to go through the typed dexlib2 interfaces.
+//
+// IMPORTANT: an instruction must never be inserted *before* a label that is a
+// branch target - that breaks the dex assembler.  All insertions below happen
+// either at the very start of a method or right after a non-target
+// instruction.
 // ---------------------------------------------------------------------------
 
 /** Destination register of a single-register instruction, or null. */
@@ -61,12 +66,11 @@ internal fun firstParamRegister(method: Method): Int {
  * Inserts [smali] at [index] (before the instruction that is currently there).
  *
  * Only inserting - never removing - keeps the individual patches independent
- * of each other: two patches that insert at the same index both survive,
- * no matter in which order they run.
+ * of each other: two patches that insert at the same index both survive, no
+ * matter in which order they run.
  *
  * A snippet that does not compile (e.g. because it uses a register a format
- * cannot address) simply adds nothing, and anything that was added is
- * rolled back.
+ * cannot address) simply adds nothing, so nothing is ever corrupted.
  */
 internal fun safeInsertInstructions(
     method: app.morphe.patcher.util.proxy.mutableTypes.MutableMethod,
@@ -76,8 +80,16 @@ internal fun safeInsertInstructions(
     val impl = method.implementation ?: return false
     val before = impl.instructions.size
     method.addInstructions(index, smali)
-    // a snippet that does not compile simply adds nothing
     return impl.instructions.size > before
+}
+
+/**
+ * Reports a patch that could not find its anchor.  This is deliberately NOT a
+ * hard error: one broken patch must never abort the whole patch run, because
+ * the point of this suite is to try many combinations.
+ */
+internal fun reportSkip(patchName: String, detail: String) {
+    println("[Export] $patchName: SKIPPED - $detail")
 }
 
 // ---------------------------------------------------------------------------
@@ -113,11 +125,10 @@ internal fun safeInsertInstructions(
 //  [Export] 3  y88yfJ73C Allow  the second gate -> always allow
 //  [Export] 4  ZFJe6vx50 Skip   don't take the export-abort branch
 //  [Export] 5  kCg72Z4t State   PRO_REQUIRED / ERROR -> PLAYING
-//  [Export] 6  LCWcMAXf Error   drop the pre-export error message
+//  [Export] 6  LCWcMAXf Error   replace the pre-export error message by ""
 //  [Export] 7  LsvcJNUbK3 Allow sub-check of gate 1 -> always allow
-//  [Export] 8  Diagnostics      logcat tracing of every gate (tag "KFPro")
+//  [Export] 8  Diagnostics      full logcat trace of the export (tag KFPro)
 //  [Export] 9  Toast            on-screen toast naming the blocker
-//  [Export] 10 LP4eSlPPu Allow  the per-Pro-feature check -> always allow
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
@@ -147,7 +158,7 @@ val exportExp1Kts6dAU4GatePatch = patch(
             }
         }
         if (patched == 0) {
-            throw Error("[Export] 1 kts6dAU4 Gate: Lkts6dAU4.NMGZ06(LXfNXj)Z not found.")
+            reportSkip("1 kts6dAU4 Gate", "Lkts6dAU4.NMGZ06(LXfNXj)Z not found")
         }
     }
 }
@@ -181,7 +192,7 @@ val exportExp2Kts6dAU4ThrowPatch = patch(
             }
         }
         if (patched == 0) {
-            throw Error("[Export] 2 kts6dAU4 Throw: no throw instruction found in Lkts6dAU4.")
+            reportSkip("2 kts6dAU4 Throw", "no throw instruction found in Lkts6dAU4")
         }
     }
 }
@@ -244,7 +255,7 @@ val exportExp3Y88yfJ73CPatch = patch(
             }
         }
         if (patched == 0) {
-            throw Error("[Export] 3 y88yfJ73C Allow: FALSE exit of LCtCUGg.y88yfJ73C not found.")
+            reportSkip("3 y88yfJ73C Allow", "FALSE exit of LCtCUGg.y88yfJ73C not found")
         }
     }
 }
@@ -295,7 +306,7 @@ val exportExp4ZFJe6vx50Patch = patch(
             }
         }
         if (patched == 0) {
-            throw Error("[Export] 4 ZFJe6vx50 Skip: abort branch after y88yfJ73C not found.")
+            reportSkip("4 ZFJe6vx50 Skip", "abort branch after y88yfJ73C not found")
         }
     }
 }
@@ -343,7 +354,7 @@ val exportExp5KCg72Z4tStatePatch = patch(
             }
         }
         if (patched == 0) {
-            throw Error("[Export] 5 kCg72Z4t State: PRO_REQUIRED/ERROR state assignment not found.")
+            reportSkip("5 kCg72Z4t State", "PRO_REQUIRED/ERROR state assignment not found")
         }
     }
 }
@@ -351,22 +362,24 @@ val exportExp5KCg72Z4tStatePatch = patch(
 // ---------------------------------------------------------------------------
 // [Export] 6 - LCWcMAXf.c3oEd: the pre-export step receives the error message
 //              as its first argument and forwards it to LCtCUGg.cdo7kOuyS(),
-//              which then flips the export state into "error". Drop it.
+//              which then flips the export state into "error".
 //
-//                  move-object/from16 v4, p0        <- replace with null
+//                  move-object/from16 v4, p0        <- replace with ""
 //                  invoke-virtual {v0, v4}, LCtCUGg;->cdo7kOuyS(Ljava/lang/Object;)Z
+//
+//              NOTE: an *empty* string is used on purpose.  A null string ends
+//              up in the export state and the app later calls String.length()
+//              on it -> NullPointerException.
 // ---------------------------------------------------------------------------
 @Suppress("unused")
 val exportExp6LCWcMAXfErrorPatch = patch(
     name = "[Export] 6 LCWcMAXf Error",
-    description = "Pass a null error message into the pre-export step.",
+    description = "Replace the pre-export error message with an empty string.",
     default = false
 ) {
     compatibleWith(COMPATIBILITY)
     execute {
         var patched = 0
-        var lastError = "<none>"
-        val errors = mutableListOf<String>()
         classDefForEach { classDef: ClassDef ->
             if (classDef.type != "LCWcMAXf;") return@classDefForEach
             val mutable = mutableClassDefBy(classDef)
@@ -386,28 +399,13 @@ val exportExp6LCWcMAXfErrorPatch = patch(
                 }
                 for (i in targets.reversed()) {
                     val reg = destRegister(instrs[i]) ?: continue
-                    // `const/4` can only address v0..v15, fall back to
-                    // `const/16` for anything above that.
-                    val candidates = listOf("const/4 v$reg, 0x0", "const/16 v$reg, 0x0")
-                    var done = false
-                    for (candidate in candidates) {
-                        try {
-                            method.replaceInstruction(i, candidate)
-                            done = true
-                            break
-                        } catch (t: Throwable) {
-                            lastError = "$candidate -> $t"
-                        }
-                    }
-                    if (done) patched++
-                    else errors.add("idx=$i reg=$reg p0=$p0 : $lastError")
+                    method.replaceInstruction(i, "const-string v$reg, \"\"")
+                    patched++
                 }
             }
         }
         if (patched == 0) {
-            throw Error(
-                "[Export] 6 LCWcMAXf Error: error-message argument not found in LCWcMAXf.c3oEd. $errors"
-            )
+            reportSkip("6 LCWcMAXf Error", "error-message argument not found in LCWcMAXf.c3oEd")
         }
     }
 }
@@ -438,7 +436,7 @@ val exportExp7LsvcJNUbK3Patch = patch(
             }
         }
         if (patched == 0) {
-            throw Error("[Export] 7 LsvcJNUbK3 Allow: LsvcJNUbK3.NMGZ06(LUov9rzUD)Z not found.")
+            reportSkip("7 LsvcJNUbK3 Allow", "LsvcJNUbK3.NMGZ06(LUov9rzUD)Z not found")
         }
     }
 }
@@ -448,61 +446,75 @@ val exportExp7LsvcJNUbK3Patch = patch(
 //
 //     adb logcat -s KFPro
 //
-// Every log line uses registers that are provably dead at that point and
-// restores them afterwards so the patched bytecode stays verifiable.
+// This traces the *whole* export, not only the Pro gates, so it also shows
+// when the export dies somewhere else:
+//
+//   KFPro: calling export function        <- the export coroutine started
+//   KFPro: export function returned       <- the export function finished
+//   KFPro: export SUCCEEDED               <- result was a success result
+//   KFPro: export FAILED: <message>       <- result was an error result
+//   KFPro: export result is a Pro result  <- result was a Pro result
+//   KFPro: Pro feature detected           <- a Pro feature was found
+//   KFPro: y88yfJ73C returned FALSE       <- the second gate blocked it
+//
 // `const-string` can only address v0..v15, so no register above 15 is used.
 // ---------------------------------------------------------------------------
 @Suppress("unused")
 val exportExp8DiagnosticsPatch = patch(
     name = "[Export] 8 Diagnostics",
-    description = "Log every export Pro gate decision to logcat (tag KFPro). Read with: adb logcat -s KFPro",
+    description = "Log the whole export flow to logcat (tag KFPro). Read with: adb logcat -s KFPro",
     default = false
 ) {
     compatibleWith(COMPATIBILITY)
     execute {
         var patched = 0
 
-        // 8a - Lkts6dAU4.GX9XN3ZIZ: the Pro-required exception is created
-        //      here. v0 is dead at that point (last use is the IdxtyejAx call).
+        // ---- LkCg72Z4t.invokeSuspend: the export coroutine ------------------
         classDefForEach { classDef: ClassDef ->
-            if (classDef.type != "Lkts6dAU4;") return@classDefForEach
+            if (classDef.type != "LkCg72Z4t;") return@classDefForEach
             val mutable = mutableClassDefBy(classDef)
             for (method in mutable.methods.toList()) {
-                if (!method.name.startsWith("GX9XN3")) continue
-                if (method.parameters.size != 3) continue
-                val impl = method.implementation ?: continue
-                val instrs = impl.instructions
-                val targets = mutableListOf<Int>()
-                for (i in instrs.indices) {
-                    if (instrs[i].opcode != Opcode.NEW_INSTANCE) continue
-                    if (refOf(instrs[i]) != "LwNKvkk7;") continue
-                    targets.add(i + 1)
-                }
-                for (i in targets.reversed()) {
-                    if (!safeInsertInstructions(
-                            method,
-                            i,
-                            """
-                            const-string v0, "KFPro: Pro feature detected -> Pro-required exception (GX9XN3ZIZ)"
-                            invoke-static {v0, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
-                            """.trimIndent()
-                        )
-                    ) continue
-                    patched++
-                }
-            }
-        }
-
-        // 8b - Lkts6dAU4.c3oEd: the second place where the exception is made.
-        //      v14 is dead at that point.
-        classDefForEach { classDef: ClassDef ->
-            if (classDef.type != "Lkts6dAU4;") return@classDefForEach
-            val mutable = mutableClassDefBy(classDef)
-            for (method in mutable.methods.toList()) {
-                if (method.name != "c3oEd") continue
+                if (method.name != "invokeSuspend") continue
                 if (method.parameters.size != 1) continue
+                if (method.returnType != "Ljava/lang/Object;") continue
                 val impl = method.implementation ?: continue
                 val instrs = impl.instructions
+
+
+                // (f) "export result is a Pro result" - the Pro result branch
+                for (i in instrs.indices) {
+                    if (instrs[i].opcode != Opcode.INSTANCE_OF) continue
+                    if (refOf(instrs[i]) != "Ly5XhdY0;") continue
+                    for (j in i + 1 until instrs.size) {
+                        if (instrs[j].opcode == Opcode.IF_EQZ) {
+                            if (!safeInsertInstructions(
+                                    method,
+                                    j + 1,
+                                    """
+                                    const-string v6, "KFPro: export result is a Pro result (Ly5XhdY0) -> PRO_REQUIRED"
+                                    invoke-static {v6, v6}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+                                    """.trimIndent()
+                                )
+                            ) break
+                            patched++
+                            break
+                        }
+                    }
+                    break
+                }
+            }
+        }
+
+        // ---- Lkts6dAU4: the Pro feature collector ---------------------------
+        classDefForEach { classDef: ClassDef ->
+            if (classDef.type != "Lkts6dAU4;") return@classDefForEach
+            val mutable = mutableClassDefBy(classDef)
+            for (method in mutable.methods.toList()) {
+                if (!method.name.startsWith("GX9XN3") && method.name != "c3oEd") continue
+                val impl = method.implementation ?: continue
+                val instrs = impl.instructions
+                val where = if (method.name == "c3oEd") "c3oEd" else "GX9XN3ZIZ"
+                val reg = if (method.name == "c3oEd") 14 else 0
                 val targets = mutableListOf<Int>()
                 for (i in instrs.indices) {
                     if (instrs[i].opcode != Opcode.NEW_INSTANCE) continue
@@ -514,8 +526,8 @@ val exportExp8DiagnosticsPatch = patch(
                             method,
                             i,
                             """
-                            const-string v14, "KFPro: Pro feature detected -> Pro-required exception (c3oEd)"
-                            invoke-static {v14, v14}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+                            const-string v$reg, "KFPro: Pro feature detected -> Pro-required exception ($where)"
+                            invoke-static {v$reg, v$reg}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
                             """.trimIndent()
                         )
                     ) continue
@@ -524,9 +536,7 @@ val exportExp8DiagnosticsPatch = patch(
             }
         }
 
-        // 8c - LCtCUGg.y88yfJ73C: the second gate. The FALSE exit is
-        //      "const/4 v1, 0". v0 holds the int 1 here; it is restored
-        //      afterwards so the register type stays consistent.
+        // ---- LCtCUGg.y88yfJ73C: the second gate -----------------------------
         classDefForEach { classDef: ClassDef ->
             if (classDef.type != "LCtCUGg;") return@classDefForEach
             val mutable = mutableClassDefBy(classDef)
@@ -539,8 +549,6 @@ val exportExp8DiagnosticsPatch = patch(
                 for (i in instrs.indices) {
                     if (const4Literal(instrs[i]) != 0) continue
                     val reg = destRegister(instrs[i]) ?: continue
-                    // the matching "return" may be a couple of instructions
-                    // away (the "Allow" patch inserts a const in between)
                     var retIdx = -1
                     for (j in i + 1..minOf(i + 4, instrs.size - 1)) {
                         if (instrs[j].opcode == Opcode.RETURN) {
@@ -549,7 +557,7 @@ val exportExp8DiagnosticsPatch = patch(
                         }
                     }
                     if (retIdx < 0) continue
-                    targets.add(i + 1)
+                    targets.add(i)
                 }
                 for (i in targets.reversed()) {
                     if (!safeInsertInstructions(
@@ -567,50 +575,8 @@ val exportExp8DiagnosticsPatch = patch(
             }
         }
 
-        // 8d - LkCg72Z4t.invokeSuspend: the app has decided that the export
-        //      result is a Pro result. v6 is dead at that point.
-        classDefForEach { classDef: ClassDef ->
-            if (classDef.type != "LkCg72Z4t;") return@classDefForEach
-            val mutable = mutableClassDefBy(classDef)
-            for (method in mutable.methods.toList()) {
-                if (method.name != "invokeSuspend") continue
-                if (method.parameters.size != 1) continue
-                val impl = method.implementation ?: continue
-                val instrs = impl.instructions
-                var branchIdx = -1
-                for (i in instrs.indices) {
-                    if (instrs[i].opcode != Opcode.INSTANCE_OF) continue
-                    if (refOf(instrs[i]) != "Ly5XhdY0;") continue
-                    // the branch that decides whether we are in the Pro branch
-                    for (j in i + 1 until instrs.size) {
-                        if (instrs[j].opcode == Opcode.IF_EQZ) {
-                            branchIdx = j
-                            break
-                        }
-                    }
-                    break
-                }
-                if (branchIdx < 0) continue
-                if (!safeInsertInstructions(
-                        method,
-                        branchIdx + 1,
-                        """
-                        const-string v6, "KFPro: export result is a Pro result (Ly5XhdY0) -> PRO_REQUIRED"
-                        invoke-static {v6, v6}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
-                        """.trimIndent()
-                    )
-                ) continue
-                patched++
-            }
-        }
-
         if (patched == 0) {
-            throw Error("[Export] 8 Diagnostics: no diagnostic anchor found.")
-        }
-        if (patched < 4) {
-            throw Error(
-                "[Export] 8 Diagnostics: only $patched of 4 diagnostic sites were instrumented."
-            )
+            reportSkip("8 Diagnostics", "no diagnostic anchor found")
         }
     }
 }
@@ -670,50 +636,11 @@ val exportExp9ToastPatch = patch(
             }
         }
         if (patched == 0) {
-            throw Error("[Export] 9 Toast: Pro-result branch in LkCg72Z4t.invokeSuspend not found.")
+            reportSkip("9 Toast", "Pro-result branch in LkCg72Z4t.invokeSuspend not found")
         }
     }
 }
 
-// ---------------------------------------------------------------------------
-// [Export] 10 - LP4eSlPPu: the per-Pro-feature check. It is the callback the
-//               main gate invokes with the stored Pro receipt; forcing it to
-//               return TRUE means "this individual Pro feature is allowed".
-// ---------------------------------------------------------------------------
-@Suppress("unused")
-val exportExp10LP4eSlPPuPatch = patch(
-    name = "[Export] 10 LP4eSlPPu Allow",
-    description = "Always allow an individual Pro feature (LP4eSlPPu.invoke).",
-    default = false
-) {
-    compatibleWith(COMPATIBILITY)
-    execute {
-        var patched = 0
-        classDefForEach { classDef: ClassDef ->
-            if (classDef.type != "LP4eSlPPu;") return@classDefForEach
-            val mutable = mutableClassDefBy(classDef)
-            for (method in mutable.methods.toList()) {
-                if (method.name != "invoke") continue
-                if (method.parameters.size != 1) continue
-                if (method.parameters[0].type != "Ljava/lang/Object;") continue
-                if (method.returnType != "Ljava/lang/Object;") continue
-                val (cloned, added) = method.addFreeRegisters(1)
-                cloned.addInstructions(
-                    added,
-                    """
-                    const/4 v0, 0x1
-                    invoke-static {v0}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
-                    move-result-object v0
-                    return-object v0
-                    """.trimIndent()
-                )
-                patched++
-            }
-        }
-        if (patched == 0) {
-            throw Error("[Export] 10 LP4eSlPPu Allow: LP4eSlPPu.invoke(Object)Object not found.")
-        }
-    }
-}
+
 
 

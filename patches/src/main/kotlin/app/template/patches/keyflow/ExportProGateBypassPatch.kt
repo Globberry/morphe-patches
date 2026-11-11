@@ -153,8 +153,7 @@ val exportProGateBypassPatch = patch(
         }
 
         if (patched == 0) {
-            throw Error("Keyflow Export Pro Gate Bypass: nothing was patched.")
+            reportSkip("Keyflow Export Pro Gate Bypass", "nothing was patched")
         }
     }
 }
-
