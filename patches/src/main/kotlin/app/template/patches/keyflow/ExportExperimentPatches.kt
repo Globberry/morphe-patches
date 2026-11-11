@@ -214,6 +214,8 @@ internal fun reportSkip(patchName: String, detail: String) {
 //  [Export] 7  LsvcJNUbK3 Allow sub-check of gate 1 -> always allow
 //  [Export] 8  Diagnostics      full logcat trace of the export (tag KFPro)
 //  [Export] 9  Toast            on-screen toast naming the blocker
+//  [Export] 10 WHoiaEDD Force   always create the editor-overlay export coroutine
+//  [Export] 12 Purchase Allow   the paid-export receipt check -> always allowed
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
@@ -720,6 +722,141 @@ val exportExp8DiagnosticsPatch = patch(
             }
         }
 
+        // ---- LP0JcGi9.lSqPRgn: the real export-screen prepare step ---------
+        //      This is the path behind the Export screen (x00.yMQp6hm ->
+        //      x00.oMKv6w5 -> ZSbsOt -> P0JcGi9.lSqPRgn).  It first asks
+        //      P0JcGi9.eFUbX for a purchase decision and turns the answer into
+        //      IlvEt (allowed), DNpZU (?) or BCTvXMkP (Pro required).
+        classDefForEach { classDef: ClassDef ->
+            if (classDef.type != "LP0JcGi9;") return@classDefForEach
+            val mutable = mutableClassDefBy(classDef)
+            for (method in mutable.methods.toList()) {
+                if (method.name != "lSqPRgn") continue
+                if (method.parameters.size != 9) continue
+                if (method.parameters[0].type != "Landroid/content/Context;") continue
+                if (method.returnType != "Ljava/lang/Object;") continue
+                val impl = method.implementation ?: continue
+                val instrs = impl.instructions
+                if (instrs.isEmpty()) continue
+
+                val inserts = mutableListOf<Pair<Int, String>>()
+
+                fun log(index: Int, reg: Int, message: String) {
+                    inserts.add(
+                        index to """
+                        const-string v$reg, "$message"
+                        invoke-static {v$reg, v$reg}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+                        """.trimIndent()
+                    )
+                }
+
+                // entry of the prepare step (before the state-machine prologue)
+                log(0, 0, "KFPro: lSqPRgn enter (export prepare)")
+
+                // the purchase-decision dispatch: v0 holds the instance-of flag
+                // here and is dead again right afterwards.
+                for (i in instrs.indices) {
+                    if (instrs[i].opcode != Opcode.CHECK_CAST) continue
+                    val message = when (refOf(instrs[i])) {
+                        "LilvEt;" -> "KFPro: lSqPRgn pro-check = IlvEt (ALLOWED)"
+                        "LDNpZU;" -> "KFPro: lSqPRgn pro-check = DNpZU"
+                        else -> continue
+                    }
+                    log(i, 0, message)
+                }
+
+                // the blocked (Pro required) branch: BCTvXMkP -> Ly5XhdY0
+                for (i in instrs.indices) {
+                    if (instrs[i].opcode != Opcode.NEW_INSTANCE) continue
+                    if (refOf(instrs[i]) != "Ly5XhdY0;") continue
+                    log(i, 0, "KFPro: lSqPRgn pro-check = BCTvXMkP -> PRO REQUIRED")
+                    break
+                }
+
+                for ((index, smali) in inserts.sortedByDescending { it.first }) {
+                    if (!safeInsertInstructions(method, index, smali)) continue
+                    patched++
+                }
+            }
+        }
+
+        // ---- LZSbsOt.invokeSuspend: the Export-screen export coroutine ------
+        //      Calls P0JcGi9.lSqPRgn and then dispatches its result into the
+        //      shared UI state.
+        classDefForEach { classDef: ClassDef ->
+            if (classDef.type != "LZSbsOt;") return@classDefForEach
+            val mutable = mutableClassDefBy(classDef)
+            for (method in mutable.methods.toList()) {
+                if (method.name != "invokeSuspend") continue
+                if (method.parameters.size != 1) continue
+                if (method.returnType != "Ljava/lang/Object;") continue
+                val impl = method.implementation ?: continue
+                val instrs = impl.instructions
+                if (instrs.isEmpty()) continue
+
+                val inserts = mutableListOf<Pair<Int, String>>()
+
+                fun log(index: Int, reg: Int, message: String) {
+                    inserts.add(
+                        index to """
+                        const-string v$reg, "$message"
+                        invoke-static {v$reg, v$reg}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+                        """.trimIndent()
+                    )
+                }
+
+                log(0, 0, "KFPro: ZSbsOt coroutine started")
+
+                // result dispatch: right before "instance-of v1, v0, LRBnKeZA7;"
+                // v1 is written by that instance-of, so it is dead here.
+                fun logAfterIfEqz(typeRef: String, message: String): Boolean {
+                    for (i in instrs.indices) {
+                        if (instrs[i].opcode != Opcode.INSTANCE_OF) continue
+                        if (refOf(instrs[i]) != typeRef) continue
+                        for (j in i + 1 until instrs.size) {
+                            if (instrs[j].opcode != Opcode.IF_EQZ) continue
+                            log(j + 1, 1, message)
+                            return true
+                        }
+                        return false
+                    }
+                    return false
+                }
+
+                // "result received" just before the success instance-of
+                for (i in instrs.indices) {
+                    if (instrs[i].opcode != Opcode.INSTANCE_OF) continue
+                    if (refOf(instrs[i]) != "LRBnKeZA7;") continue
+                    log(i, 1, "KFPro: ZSbsOt result received")
+                    break
+                }
+                logAfterIfEqz("LRBnKeZA7;", "KFPro: ZSbsOt export SUCCEEDED")
+                logAfterIfEqz("LR7XqhtD;", "KFPro: ZSbsOt export FAILED")
+                logAfterIfEqz("Ly5XhdY0;", "KFPro: ZSbsOt export PRO result")
+
+                for ((index, smali) in inserts.sortedByDescending { it.first }) {
+                    if (!safeInsertInstructions(method, index, smali)) continue
+                    patched++
+                }
+            }
+        }
+
+        // ---- Lx00.oMKv6w5: the Export-screen "start export" entry ----------
+        classDefForEach { classDef: ClassDef ->
+            if (classDef.type != "Lx00;") return@classDefForEach
+            val mutable = mutableClassDefBy(classDef)
+            for (method in mutable.methods.toList()) {
+                if (method.name != "oMKv6w5") continue
+                if (method.parameters.size != 20) continue
+                if (method.returnType != "V") continue
+                val impl = method.implementation ?: continue
+                val instrs = impl.instructions
+                if (instrs.isEmpty()) continue
+                if (!insertLogBefore(method, 0, 0, "KFPro: x00.oMKv6w5 export requested")) continue
+                patched++
+            }
+        }
+
         // ---- Lkts6dAU4: the Pro feature collector ---------------------------
         classDefForEach { classDef: ClassDef ->
             if (classDef.type != "Lkts6dAU4;") return@classDefForEach
@@ -925,6 +1062,73 @@ val exportExp10ForceExportPatch = patch(
         }
     }
 }
+
+// ---------------------------------------------------------------------------
+// [Export] 12 - LP0JcGi9.MeOIJuj: the paid-export purchase check.
+//
+// This is the check that the Export *screen* actually goes through.  The
+// export coroutine ZSbsOt calls P0JcGi9.lSqPRgn, which calls P0JcGi9.eFUbX.
+// Because the Pro Unlock patch forces the "is Pro" flag to true, eFUbX
+// delegates to MeOIJuj, which verifies the stored LuenIfX receipt with
+// LEPiS52 (signature + signer certificate) and turns the two resulting
+// booleans into one of three answers:
+//
+//     if-eqz p2, :cond_9          <- p2 = verification result
+//     new-instance p0, LilvEt;    <- ALLOWED
+//     invoke-direct {p0, p1}, LilvEt;-><init>(LuenIfX;)V
+//     return-object p0
+//     :cond_9
+//     if-nez p0, :cond_a
+//     ... new-instance BCTvXMkP(W7vkhIw.BEDum)      <- "not purchased"
+//     :cond_a
+//     ... new-instance BCTvXMkP(W7vkhIw.Ei8C6JWM)   <- cancelled / other
+//
+// The Pro Unlock patch fabricates the receipt LuenIfX("", ""), so the
+// signature check always fails and every project that uses Pro features gets
+// a BCTvXMkP result.  lSqPRgn turns that into Ly5XhdY0 (PRO_REQUIRED) and the
+// export screen silently returns to the export menu.
+//
+// Replacing that one branch with nop makes MeOIJuj always return the LilvEt
+// (allowed) result.  The nop keeps the instruction count - and therefore
+// every branch offset - intact.
+// ---------------------------------------------------------------------------
+@Suppress("unused")
+val exportExp12MeOIJujPurchasePatch = patch(
+    name = "[Export] 12 Purchase Allow",
+    description = "Always accept the paid-export purchase check (LP0JcGi9.MeOIJuj).",
+    default = false
+) {
+    compatibleWith(COMPATIBILITY)
+    execute {
+        var patched = 0
+        classDefForEach { classDef: ClassDef ->
+            if (classDef.type != "LP0JcGi9;") return@classDefForEach
+            val mutable = mutableClassDefBy(classDef)
+            for (method in mutable.methods.toList()) {
+                if (method.name != "MeOIJuj") continue
+                if (method.parameters.size != 2) continue
+                if (method.parameters[0].type != "Landroid/content/Context;") continue
+                if (method.returnType != "Ljava/lang/Object;") continue
+                val impl = method.implementation ?: continue
+                val instrs = impl.instructions
+                // There is exactly one "new-instance LilvEt;" in the app.
+                for (i in instrs.indices) {
+                    if (instrs[i].opcode != Opcode.NEW_INSTANCE) continue
+                    if (refOf(instrs[i]) != "LilvEt;") continue
+                    val branch = i - 1
+                    if (branch < 0) continue
+                    if (instrs[branch].opcode != Opcode.IF_EQZ) continue
+                    method.replaceInstruction(branch, "nop")
+                    patched++
+                }
+            }
+        }
+        if (patched == 0) {
+            reportSkip("12 Purchase Allow", "LilvEt branch in LP0JcGi9.MeOIJuj not found")
+        }
+    }
+}
+
 
 
 
