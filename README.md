@@ -19,9 +19,9 @@ Click the button below, or manually add this repo url to Morphe Manager: https:/
 ## 🩹 Patches list
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.5.0](https://github.com/Globberry/morphe-patches/releases/tag/v1.5.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;19 patches total
+> **[v1.6.0](https://github.com/Globberry/morphe-patches/releases/tag/v1.6.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;20 patches total
 <details open>
-<summary>📦 Keyflow&nbsp;&nbsp;•&nbsp;&nbsp;19 patches</summary>
+<summary>📦 Keyflow&nbsp;&nbsp;•&nbsp;&nbsp;20 patches</summary>
 <br>
 
 **Package name:** `com.angkin.keyflow`
@@ -44,6 +44,7 @@ Click the button below, or manually add this repo url to Morphe Manager: https:/
 | [[ALL] Pro Unlock](#all-pro-unlock) | Forces all Pro features enabled using fingerprint matching (version-robust for method name changes). |  |
 | [[ALL] Signer Identity](#all-signer-identity) | Forces the app's signer identity to match the original publisher certificate (fingerprint-based, version-robust). |  |
 | [[Export] 1 kts6dAU4 Gate](#export-1-kts6dau4-gate) | Always allow Pro features in the export Pro gate (Lkts6dAU4.NMGZ06). |  |
+| [[Export] 10 WHoiaEDD Force Export](#export-10-whoiaedd-force-export) | Always create the export coroutine in WHoiaEDD (skips the export-trigger check). |  |
 | [[Export] 2 kts6dAU4 Throw](#export-2-kts6dau4-throw) | Do not throw the Pro-required exception (LwNKvkk7) during export. |  |
 | [[Export] 3 y88yfJ73C Allow](#export-3-y88yfj73c-allow) | Always let the export pass the LCtCUGg.y88yfJ73C abort check. |  |
 | [[Export] 4 ZFJe6vx50 Skip](#export-4-zfje6vx50-skip) | Never take the export-abort branch in LZFJe6vx50.invoke. |  |

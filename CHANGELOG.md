@@ -1,3 +1,9 @@
+## [1.6.0](https://github.com/Globberry/morphe-patches/compare/v1.5.0...v1.6.0) (2026-11-11)
+
+### ✨ New Features
+
+* [Export] 10 WHoiaEDD Force Export - bypass the export-trigger check ([679956a](https://github.com/Globberry/morphe-patches/commit/679956af61d6b1652efe2d53b0cc0aa0a09f47e1))
+
 ## [1.5.0](https://github.com/Globberry/morphe-patches/compare/v1.4.1...v1.5.0) (2026-11-11)
 
 ### ✨ New Features
