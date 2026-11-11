@@ -518,13 +518,17 @@ val exportExp7LsvcJNUbK3Patch = patch(
 // This traces the *whole* export, not only the Pro gates, so it also shows
 // when the export dies somewhere else:
 //
-//   KFPro: calling export function        <- the export coroutine started
+//   KFPro: coroutine enter, state=N       <- every entry of the export coroutine
+//   KFPro: project/export range is NULL   <- the silent "reset to IDLE" exit
+//   KFPro: calling export prepare         <- before the prepare/withContext step
+//   KFPro: export prepare returned        <- the prepare step completed
+//   KFPro: export function entered        <- the real export function was called
 //   KFPro: export function returned       <- the export function finished
 //   KFPro: export SUCCEEDED               <- result was a success result
-//   KFPro: export FAILED: <message>       <- result was an error result
+//   KFPro: export FAILED                  <- result was an error result
 //   KFPro: export result is a Pro result  <- result was a Pro result
 //   KFPro: Pro feature detected           <- a Pro feature was found
-//   KFPro: y88yfJ73C returned FALSE       <- the second gate blocked it
+//   KFPro: y88yfJ73C ...                  <- the second gate was consulted
 //
 // `const-string` can only address v0..v15, so no register above 15 is used.
 // ---------------------------------------------------------------------------
@@ -639,6 +643,71 @@ val exportExp8DiagnosticsPatch = patch(
                             log(j + 1, 6, "KFPro: export result is a Pro result (Ly5XhdY0) -> PRO_REQUIRED")
                             break
                         }
+                    }
+                    break
+                }
+
+                // (g) every entry of the coroutine together with its state
+                //     label (v2/v3 are dead here - both are re-assigned right
+                //     after the method prologue).  The first run enters with
+                //     state 0; a resumed run enters with state 1 or 2.
+                for (i in instrs.indices) {
+                    if (instrs[i].opcode != Opcode.IGET) continue
+                    val ref = refOf(instrs[i]) ?: continue
+                    if (!ref.contains("LkCg72Z4t;->Ei8C6JWM:I")) continue
+                    inserts.add(
+                        i to """
+                        iget v2, v12, LkCg72Z4t;->Ei8C6JWM:I
+                        const-string v3, "KFPro: coroutine enter, state="
+                        invoke-static {v2}, Ljava/lang/String;->valueOf(I)Ljava/lang/String;
+                        move-result-object v2
+                        invoke-static {v3, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+                        """.trimIndent()
+                    )
+                    break
+                }
+
+                // (h) the "no export range -> silently reset to IDLE" abort
+                for (i in instrs.indices) {
+                    if (instrs[i].opcode != Opcode.IGET_OBJECT) continue
+                    val ref = refOf(instrs[i]) ?: continue
+                    if (!ref.contains("LkCg72Z4t;->kwEINn3:")) continue
+                    for (j in i + 1 until minOf(i + 4, instrs.size)) {
+                        if (instrs[j].opcode != Opcode.IF_NEZ) continue
+                        inserts.add(
+                            (j + 1) to """
+                            const-string v2, "KFPro: project/export range is NULL -> export aborted (state IDLE)"
+                            invoke-static {v2, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+                            """.trimIndent()
+                        )
+                        break
+                    }
+                    break
+                }
+
+                // (i) right before the prepare step (a withContext helper)
+                // (j) right after that helper returned.  v6 holds the high
+                //     word of the start time from here on, so it is dead at
+                //     both points.
+                for (i in instrs.indices) {
+                    if (instrs[i].opcode != Opcode.INVOKE_STATIC) continue
+                    val ref = refOf(instrs[i]) ?: continue
+                    if (!ref.contains("Ldm1;->oJpK3JT6v")) continue
+                    inserts.add(
+                        i to """
+                        const-string v6, "KFPro: calling export prepare"
+                        invoke-static {v6, v6}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+                        """.trimIndent()
+                    )
+                    for (j in i + 1 until minOf(i + 5, instrs.size)) {
+                        if (instrs[j].opcode != Opcode.MOVE_RESULT_OBJECT) continue
+                        inserts.add(
+                            (j + 1) to """
+                            const-string v6, "KFPro: export prepare returned"
+                            invoke-static {v6, v6}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+                            """.trimIndent()
+                        )
+                        break
                     }
                     break
                 }
@@ -788,68 +857,7 @@ val exportExp9ToastPatch = patch(
 }
 
 // ---------------------------------------------------------------------------
-// [Export] 11 - Ldm1.oJpK3JT6v is what actually starts the export.  It asks
-//                the context whether the export may run:
-//
-//     invoke-interface {p0, v2, v1}, LdUFfAWSX;->Ei8C6JWM(LVOhjBYkE;Ljava/lang/Object;)Ljava/lang/Object;
-//     move-result-object v1
-//     check-cast v1, Ljava/lang/Boolean;
-//     invoke-virtual {v1}, Ljava/lang/Boolean;->booleanValue()Z
-//     move-result v1
-//     const/4 v2, 0x0
-//     if-nez v1, :cond_0        <- TRUE  -> build the export coroutine
-//     ... Kevrq(...)             <- FALSE -> sentinel, export silently skipped
-//
-//                Replacing the check with Boolean.TRUE makes the launcher
-//                always take the "build the export coroutine" path.
-//                The replacement keeps an invoke right before the
-//                move-result-object, which the dex format requires.
-// ---------------------------------------------------------------------------
-@Suppress("unused")
-val exportExp11AllowExportPatch = patch(
-    name = "[Export] 11 Ldm1 Allow Export",
-    description = "Always let the export start (Ldm1.oJpK3JT6v: the context's export check returns TRUE).",
-    default = false
-) {
-    compatibleWith(COMPATIBILITY)
-    execute {
-        var patched = 0
-        classDefForEach { classDef: ClassDef ->
-            if (classDef.type != "Ldm1;") return@classDefForEach
-            val mutable = mutableClassDefBy(classDef)
-            for (method in mutable.methods.toList()) {
-                if (method.name != "oJpK3JT6v") continue
-                if (method.parameters.size != 3) continue
-                if (method.parameters[0].type != "LdUFfAWSX;") continue
-                if (method.returnType != "Ljava/lang/Object;") continue
-                val impl = method.implementation ?: continue
-                val instrs = impl.instructions
-                val targets = mutableListOf<Int>()
-                for (i in instrs.indices) {
-                    if (instrs[i].opcode != Opcode.INVOKE_INTERFACE) continue
-                    val ref = refOf(instrs[i]) ?: continue
-                    if (!ref.contains("LdUFfAWSX;->Ei8C6JWM")) continue
-                    targets.add(i)
-                }
-                for (i in targets.reversed()) {
-                    if (!safeReplaceInstructions(
-                            method,
-                            i,
-                            """
-                            const/4 v3, 0x1
-                            invoke-static {v3}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
-                            """.trimIndent()
-                        )
-                    ) continue
-                    patched++
-                }
-            }
-        }
-        if (patched == 0) {
-            reportSkip("11 Ldm1 Allow Export", "export-start check not found in Ldm1.oJpK3JT6v")
-        }
-    }
-}
+// [Export] 10 - WHoiaEDD.Ei8C6JWM is the Compose launcher of the export
 //               coroutine.  It looks like this:
 //
 //                   invoke-virtual {v3}, LCtCUGg;->bPrNb6O()Ljava/lang/Object;
