@@ -19,7 +19,7 @@ Click the button below, or manually add this repo url to Morphe Manager: https:/
 ## 🩹 Patches list
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.3.4](https://github.com/Globberry/morphe-patches/releases/tag/v1.3.4)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;10 patches total
+> **[v1.3.5](https://github.com/Globberry/morphe-patches/releases/tag/v1.3.5)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;10 patches total
 <details open>
 <summary>📦 Keyflow&nbsp;&nbsp;•&nbsp;&nbsp;10 patches</summary>
 <br>

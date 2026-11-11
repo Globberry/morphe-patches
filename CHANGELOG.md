@@ -1,3 +1,9 @@
+## [1.3.5](https://github.com/Globberry/morphe-patches/compare/v1.3.4...v1.3.5) (2026-11-11)
+
+### 🐛 Bug Fixes
+
+* comprehensive Export Pro Gate Bypass - 4-part patch ([f60d420](https://github.com/Globberry/morphe-patches/commit/f60d42025c438b1a0ea9db4fe4f4efa03c43d01d))
+
 ## [1.3.4](https://github.com/Globberry/morphe-patches/compare/v1.3.3...v1.3.4) (2026-11-11)
 
 ### 🐛 Bug Fixes
