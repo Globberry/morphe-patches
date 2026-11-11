@@ -1,3 +1,9 @@
+## [1.7.1](https://github.com/Globberry/morphe-patches/compare/v1.7.0...v1.7.1) (2026-11-11)
+
+### 🐛 Bug Fixes
+
+* trace the export coroutine's prepare step; drop the bogus Ldm1 patch ([42fa7b2](https://github.com/Globberry/morphe-patches/commit/42fa7b28cf99b60dffa4395c892c5f5dd4f9b7b5))
+
 ## [1.7.0](https://github.com/Globberry/morphe-patches/compare/v1.6.0...v1.7.0) (2026-11-11)
 
 ### ✨ New Features

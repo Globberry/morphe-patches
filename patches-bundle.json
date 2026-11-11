@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-11T09:23:50",
-  "description": "## [1.7.0](https://github.com/Globberry/morphe-patches/compare/v1.6.0...v1.7.0) (2026-11-11)\n\n### ✨ New Features\n\n* [Export] 11 Ldm1 Allow Export - the export-start check ([8733d67](https://github.com/Globberry/morphe-patches/commit/8733d6770141e6f6baf712736ba8d241bb0cb9e1))",
-  "download_url": "https://github.com/Globberry/morphe-patches/releases/download/v1.7.0/patches-1.7.0.mpp",
+  "created_at": "2026-11-11T09:52:59",
+  "description": "## [1.7.1](https://github.com/Globberry/morphe-patches/compare/v1.7.0...v1.7.1) (2026-11-11)\n\n### 🐛 Bug Fixes\n\n* trace the export coroutine's prepare step; drop the bogus Ldm1 patch ([42fa7b2](https://github.com/Globberry/morphe-patches/commit/42fa7b28cf99b60dffa4395c892c5f5dd4f9b7b5))",
+  "download_url": "https://github.com/Globberry/morphe-patches/releases/download/v1.7.1/patches-1.7.1.mpp",
   "signature_download_url": "",
-  "version": "1.7.0"
+  "version": "1.7.1"
 }
