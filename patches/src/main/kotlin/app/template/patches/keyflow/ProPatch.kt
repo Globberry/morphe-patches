@@ -24,87 +24,28 @@ val proPatch = patch(
     execute {
         // ========================================================================
         // 1. Qx0hrwEl equivalent = Lf6olX
-        //    H2h1oPylj(Context, RbDM1) -> NMGZ06(Context, ArrayList, LbJtamtc;)
-        //    azrbON(Context, RbDM1) -> yMQp6hm(Context, LbJtamtc;)
+        //    lSqPRgn()Z reports "effects catalog loaded in free mode". Forcing it
+        //    true keeps premium effects usable in the editor/preview (free users
+        //    may use them, with the Pro warning popup), while the export gates
+        //    below handle the paid-export restriction.
+        //
+        //    Do NOT touch the refresh/load methods in this class:
+        //    - yMQp6hm(Context, Continuation) fetches the real effects catalog;
+        //    - NMGZ06(Context, ArrayList, Continuation) persists it.
+        //    Short-circuiting either one leaves the premium effects list empty,
+        //    so those effects render as nothing in preview and export.
         // ========================================================================
         classDefForEach { classDef: ClassDef ->
             if (classDef.type == "Lf6olX;") {
                 val mutable = mutableClassDefBy(classDef)
 
-                // <clinit>()V -> yMQp6hm=false, lSqPRgn=false
-                val (clinitCloned, clinitAdded) = mutable.methods.first { m ->
-                    m.name == "<clinit>" && m.parameters.isEmpty() && m.returnType == "V" && (m.accessFlags and AccessFlags.STATIC.value) != 0
-                }.addFreeRegisters(2)
-                clinitCloned.addInstructions(clinitAdded, """
-                    const/4 v0, 0x0
-                    sput-boolean v0, Lf6olX;->yMQp6hm:Z
-                    const/4 v0, 0x0
-                    sput-boolean v0, Lf6olX;->lSqPRgn:Z
-                """)
-
-                // NMGZ06(Context, ArrayList, LbJtamtc;) -> return Boolean.TRUE (non-sentinel, passes check-cast)
-                mutable.methods.first { m ->
-                    m.name == "NMGZ06" &&
-                        m.parameters.size == 3 &&
-                        m.parameters[0].type.toString() == "Landroid/content/Context;" &&
-                        m.parameters[1].type.toString() == "Ljava/util/ArrayList;" &&
-                        m.parameters[2].type.toString() == "LbJtamtc;" &&
-                        m.returnType.toString() == "Ljava/lang/Object;" &&
-                        (m.accessFlags and AccessFlags.STATIC.value) != 0
-                }.let { method ->
-                    val (cloned, added) = method.addFreeRegisters(1)
-                    cloned.addInstructions(added, """
-                        const/4 v0, 0x1
-                        invoke-static {v0}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
-                        move-result-object v0
-                        return-object v0
-                    """)
-                }
-
-                // yMQp6hm(Context, LbJtamtc;) -> return Boolean.TRUE directly (Pro active)
-                // Callers check if-ne v2, sentinel; returning Boolean.TRUE passes the check
-                mutable.methods.first { m ->
-                    m.name == "yMQp6hm" &&
-                        m.parameters.size == 2 &&
-                        m.parameters[0].type.toString() == "Landroid/content/Context;" &&
-                        m.parameters[1].type.toString() == "LbJtamtc;" &&
-                        m.returnType.toString() == "Ljava/lang/Object;" &&
-                        (m.accessFlags and AccessFlags.STATIC.value) == 0
-                }.let { method ->
-                    val (cloned, added) = method.addFreeRegisters(1)
-                    cloned.addInstructions(added, """
-                        const/4 v0, 0x1
-                        invoke-static {v0}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
-                        move-result-object v0
-                        return-object v0
-                    """)
-                }
-
-                // lSqPrgn()Z -> always return true (so NMGZ06() proceeds)
+                // lSqPRgn()Z -> always return true
                 mutable.methods.first { m ->
                     m.name == "lSqPRgn" &&
                         m.parameters.isEmpty() &&
                         m.returnType == "Z" &&
                         (m.accessFlags and AccessFlags.STATIC.value) != 0
                 }.returnEarly(true)
-
-                // Patch ALL Object-returning methods in f6olX to return Boolean.TRUE at
-                // position 0, so they return before reaching the if-ne sentinel check
-                // (goto :goto_aX after if-ne v2, v4).
-                // Use .toList() to snapshot the methods before iterating — addFreeRegisters
-                // clones/replaces methods in the live collection, which would otherwise
-                // throw ConcurrentModificationException during forEach.
-                mutable.methods.toList().forEach { m ->
-                    if (m.returnType.toString() == "Ljava/lang/Object;") {
-                        val (cloned, added) = m.addFreeRegisters(1)
-                        cloned.addInstructions(added, """
-                            const/4 v0, 0x1
-                            invoke-static {v0}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
-                            move-result-object v0
-                            return-object v0
-                        """)
-                    }
-                }
             }
         }
 
@@ -367,45 +308,6 @@ val proPatch = patch(
                     """)
                 }
             }
-        }
-
-        // ========================================================================
-        // 7. f6olX premium-gate gotos. Each gate site looks like:
-        //
-        //        invoke-virtual ..., L...;->yMQp6hm(...)Ljava/lang/Object;
-        //        move-result-object vX
-        //        if-ne vX, vSentinel, :cond_Z    ; premium path
-        //        goto :goto_Y                    ; failure path
-        //
-        //    Replacing the failure goto with nop makes both outcomes reach the
-        //    premium path, so export is not rejected on projects using Pro.
-        // ========================================================================
-        var f6olxGotoSites = 0
-        classDefForEach { classDef: ClassDef ->
-            if (classDef.type != "Lf6olX;") return@classDefForEach
-            val mutable = mutableClassDefBy(classDef)
-            for (method in mutable.methods.toList()) {
-                val impl = method.implementation ?: continue
-                val instrs = impl.instructions
-                val gotoIndices = mutableListOf<Int>()
-                for (i in instrs.indices) {
-                    if (instrs[i].opcode != Opcode.IF_NE) continue
-                    if (i + 1 >= instrs.size) continue
-                    val next = instrs[i + 1]
-                    if (next.opcode != Opcode.GOTO && next.opcode != Opcode.GOTO_16) continue
-                    gotoIndices.add(i + 1)
-                }
-                for (index in gotoIndices.reversed()) {
-                    method.replaceInstruction(index, "nop")
-                    f6olxGotoSites++
-                }
-            }
-        }
-        if (f6olxGotoSites == 0) {
-            throw Error(
-                "Pro Unlock: no if-ne->goto failure sites found in f6olX - " +
-                    "expected Keyflow 1.5.10 classes4.dex."
-            )
         }
 
         // ========================================================================

@@ -75,7 +75,7 @@ val signerPatch = patch(
 
         // --- jO2pqaX -> LUuxmVJjT: pX6SrQYLl(PackageInfo) -> GX9XN3ZIZ(PackageInfo) ---
         classDefForEach { classDef: ClassDef ->
-            if (classDef.type == "LuuxmVJjT;") {
+            if (classDef.type == "LUuxmVJjT;") {
                 val mutable = mutableClassDefBy(classDef)
 
                 // GX9XN3ZIZ(PackageInfo) -> return original cert as singleton list
@@ -97,7 +97,7 @@ val signerPatch = patch(
         // this method. When it returns false the app treats itself as modified
         // and resets/disables Pro.
         classDefForEach { classDef: ClassDef ->
-            if (classDef.type != "LuuxmVJjT;") return@classDefForEach
+            if (classDef.type != "LUuxmVJjT;") return@classDefForEach
             val mutable = mutableClassDefBy(classDef)
             mutable.methods.first { m ->
                 m.name == "yMQp6hm" &&
@@ -109,28 +109,11 @@ val signerPatch = patch(
             }.returnEarly(true)
         }
 
-        // --- byYKY0yXO.NMGZ06(Context, LyDPQAXIU) -> dummy non-null string ---
-        // Called during export to verify the signer identity. Returning null
-        // (e.g. after the APK was re-signed) makes the export path fail.
-        classDefForEach { classDef: ClassDef ->
-            if (classDef.type != "LbyYKY0yXO;") return@classDefForEach
-            val mutable = mutableClassDefBy(classDef)
-            mutable.methods.first { m ->
-                m.name == "NMGZ06" &&
-                    m.parameters.size == 2 &&
-                    m.parameters[0].type == "Landroid/content/Context;" &&
-                    m.parameters[1].type.startsWith("L") &&
-                    m.parameters[1].type.endsWith(";") &&
-                    m.returnType == "Ljava/lang/String;" &&
-                    (m.accessFlags and AccessFlags.STATIC.value) != 0
-            }.let { method ->
-                val (cloned, added) = method.addFreeRegisters(1)
-                cloned.addInstructions(added, """
-                    const-string v0, "dummy"
-                    return-object v0
-                """)
-            }
-        }
+        // --- byYKY0yXO.NMGZ06(Context, LyDPQAXIU) must NOT be stubbed ---
+        // This is not a signer check: it decrypts the premium effect payloads
+        // (GLSL shaders) held in EwQUfST73. The certificate-list override above
+        // makes its signer-key path succeed. Returning a dummy string here makes
+        // every shader effect render as identity in preview and export.
     }
 }
 
