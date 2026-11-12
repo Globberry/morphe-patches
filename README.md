@@ -1,20 +1,20 @@
-# 👋🧩 Morphe Patches template
+# 🧩 Morphe Patches
 
-Template repository for Morphe Patches.
+A collection of patches for [Morphe](https://morphe.software).
 
 ## ❓ About
 
-Patches for apps I like.
-
-<!-- TODO: Update this about section with a brief introduction/summary about this repo and what it offers. -->
+This repository contains Morphe patches and publishes them as `.mpp` bundles.
 
 ### How to use these patches
 
-Click the button below, or manually add this repo url to Morphe Manager: https://github.com/Globberry/keyflow-patches
+Add this repository to Morphe Manager:
 
-<a href="https://morphe.software/add-source?github=Globberry/keyflow-patches">
+<a href="https://morphe.software/add-source?github=Globberry/morphe-patches">
   <img src=".github/assets/add-to-morphe.svg" alt="Add to Morphe" height="48">
 </a>
+
+Or use the repository URL directly: https://github.com/Globberry/morphe-patches
 
 ## 🩹 Patches list
 
@@ -23,8 +23,6 @@ Click the button below, or manually add this repo url to Morphe Manager: https:/
 <details open>
 <summary>📦 Keyflow&nbsp;&nbsp;•&nbsp;&nbsp;6 patches</summary>
 <br>
-
-**Package name:** `com.angkin.keyflow`
 
 **🎯 Supported versions:**
 
@@ -47,12 +45,12 @@ Click the button below, or manually add this repo url to Morphe Manager: https:/
 ### 🛠️ Building locally
 
 - Run `./gradlew buildAndroid`
-- The built patches .mpp file is found in `patches/build/libs/patches-*.mpp`
-- Patch the mpp file using [Morphe-Desktop](https://github.com/MorpheApp/morphe-desktop)
+- The bundle is written to `patches/build/libs/patches-*.mpp`
+- Apply it with [Morphe-Desktop](https://github.com/MorpheApp/morphe-desktop)
   like any other patch bundle.
 
 See the [Morphe documentation](https://github.com/MorpheApp/morphe-documentation) for more information.
 
 ## 📜 License
 
-UserXYZ Patches are licensed under the [GNU General Public License v3.0](LICENSE)
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
