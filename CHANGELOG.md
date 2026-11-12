@@ -1,3 +1,9 @@
+## [1.7.4](https://github.com/Globberry/morphe-patches/compare/v1.7.3...v1.7.4) (2026-11-12)
+
+### 🐛 Bug Fixes
+
+* render premium shader effects on re-signed builds ([13ad278](https://github.com/Globberry/morphe-patches/commit/13ad278112000d86f5c84c5cafe0d45f45f4a308))
+
 ## [1.7.3](https://github.com/Globberry/morphe-patches/compare/v1.7.2...v1.7.3) (2026-11-11)
 
 ### 🐛 Bug Fixes
