@@ -19,7 +19,7 @@ Or use the repository URL directly: https://github.com/Globberry/morphe-patches
 ## 🩹 Patches list
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.7.4](https://github.com/Globberry/morphe-patches/releases/tag/v1.7.4)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;6 patches total
+> **[v1.7.5](https://github.com/Globberry/morphe-patches/releases/tag/v1.7.5)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;6 patches total
 <details open>
 <summary>📦 Keyflow&nbsp;&nbsp;•&nbsp;&nbsp;6 patches</summary>
 <br>

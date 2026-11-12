@@ -1,3 +1,9 @@
+## [1.7.5](https://github.com/Globberry/morphe-patches/compare/v1.7.4...v1.7.5) (2026-11-12)
+
+### 🐛 Bug Fixes
+
+* refresh repository metadata and README ([876a6af](https://github.com/Globberry/morphe-patches/commit/876a6afb2d9bb0206936473bf7af863590457a6e))
+
 ## [1.7.4](https://github.com/Globberry/morphe-patches/compare/v1.7.3...v1.7.4) (2026-11-12)
 
 ### 🐛 Bug Fixes
